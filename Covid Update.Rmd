@@ -1,0 +1,61 @@
+---
+title: "Covid Update"
+date: "vom `r format(Sys.time(), '%a, den %d. %b. %Y')`"
+author: Dr. Alexander Bernardi
+email: alexander.leisser.bernardi@gmail.com
+output: 
+   html_notebook: default
+   pdf_document: default
+---
+
+```{r init, echo = FALSE}
+library(tidyverse)
+library(lubridate)
+suppressMessages(source("01_process_data.R"))
+```
+Bis zum `r weekdays(max(ems.ages.bmsgpk.timeline$Datum))`, den `r max(ems.ages.bmsgpk.timeline$Datum)` wurden 
+`r as.character(sum(ages.timeline[ages.timeline$Bundesland != "Österreich", ]$Faelle.neu))` positiv getestete Fälle registriert.
+Davon waren `r round(ages.sex.bundesländer[ages.sex.bundesländer$Bundesland == "Österreich" & ages.sex.bundesländer$Geschlecht == "m", ]$ratio, digits = 2)`% männlich.
+
+# Inzidenzen #
+
+Für `r weekdays(max(ems.ages.bmsgpk.timeline$Datum))`, den `r max(ems.ages.bmsgpk.timeline$Datum)` zeigen die AGES Daten
+`r ems.ages.bmsgpk.timeline[ems.ages.bmsgpk.timeline$Datum == max(ems.ages.bmsgpk.timeline$Datum), ]$ages.neu` 
+Neuerkrankungen in Österreich. Am Tag zuvor waren es 
+`r ems.ages.bmsgpk.timeline[ems.ages.bmsgpk.timeline$Datum == max(ems.ages.bmsgpk.timeline$Datum)-1, ]$ages.neu` 
+und am `r weekdays(max(ems.ages.bmsgpk.timeline$Datum))` vor einer Woche 
+`r ems.ages.bmsgpk.timeline[ems.ages.bmsgpk.timeline$Datum == max(ems.ages.bmsgpk.timeline$Datum)-7, ]$ages.neu` 
+Neuerkrankungen.
+
+```{r epidemic_curve, echo = FALSE}
+graph.epidemiologic_curve
+```
+
+
+Die 7-Tages-Inzidenz beträgt somit am `r weekdays(max(ems.ages.bmsgpk.timeline$Datum))`, den `r max(ems.ages.bmsgpk.timeline$Datum)` für Österreich 
+`r round(ems.ages.bmsgpk.timeline[ems.ages.bmsgpk.timeline$Datum == max(ems.ages.bmsgpk.timeline$Datum), ]$ages.inc, digits = 0)` 
+pro 100.000 Einwohner. Am Tag zuvor waren es
+`r round(ems.ages.bmsgpk.timeline[ems.ages.bmsgpk.timeline$Datum == max(ems.ages.bmsgpk.timeline$Datum)-1, ]$ages.inc, digits = 0)`
+und am `r weekdays(max(ems.ages.bmsgpk.timeline$Datum))` vor einer Woche 
+`r round(ems.ages.bmsgpk.timeline[ems.ages.bmsgpk.timeline$Datum == max(ems.ages.bmsgpk.timeline$Datum)-7, ]$ages.inc, digits = 0)` 
+pro 100.000 Einwohner.
+
+```{r inzidenz_österreich_gesamt, echo = FALSE}
+graph.inz7d.österreich
+```
+
+
+```{r bundesländer.inc7d, echo=FALSE}
+table.ems.ages.bmsgpk.timeline
+```
+
+```{r inzidenz_bundesländer, echo = FALSE}
+graph.inz7d.bundesländer
+```
+
+# Hospitalisierung #
+
+```{r hospitalisierung, echo = FALSE}
+graph.hospitalisierung
+```
+
