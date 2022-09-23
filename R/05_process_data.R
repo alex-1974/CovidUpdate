@@ -12,7 +12,7 @@ img.path <- "img"
 source("R/01_load_data.R")
 ems.ages.bmsgpk.timeline <- readRDS(paste0(.rds.path, "ems_ages_bmsgpk_timeline.rds"))
 ages.estimate_r.österreich.gesamt <- readRDS(paste0(.rds.path, "ages_reff_österreich_gesamt.rds"))
-ems.estimate_r.österreich.gesamt <-readRDS(paste0(.rds.path, "ems_reff_österreich_gesamt.rds"))
+#ems.estimate_r.österreich.gesamt <-readRDS(paste0(.rds.path, "ems_reff_österreich_gesamt.rds"))
 ages.estimate_r.österreich.altersgruppe.gesamt <- readRDS(paste0(.rds.path, "ages_reff_österreich_altersgruppe_gesamt.rds"))
 timeline.covid <- readRDS(paste0(.rds.path, "timeline_covid.rds"))
 
@@ -68,13 +68,18 @@ bmsgpk.test <- purrr::reduce(
   # kombiniere bmsgpk.timeline mit ages.timeline um die Einwohnerzahl 
   # für die Inzidenzenberechnung zu erhalten.
   list(
-    bmsgpk.timeline |> select(Datum = Meldedatum, Bundesland, Tests.gesamt.neu, Tests.AG.neu, Tests.PCR.neu, Faelle.neu),
-    ages.timeline |> select(Datum = Testdatum, Bundesland, Einwohner)
+    bmsgpk.timeline |> select(Datum = Meldedatum, Bundesland, Tests.gesamt.neu, Tests.AG.neu, Tests.PCR.neu),
+    ages.timeline |> select(Datum = Testdatum, Bundesland, Einwohner, Faelle.neu)
   ),
   dplyr::right_join,
   by = c("Datum", "Bundesland")
 ) |>
   select(Datum, Bundesland, Einwohner, Tests.gesamt.neu, Tests.AG.neu, Tests.PCR.neu, Faelle.neu) |>
+  filter(
+    if_all(
+    .cols = starts_with("Tests"),
+    .fns = ~ !is.na(.x)
+  )) |>
   group_by(Bundesland) |>
   mutate(
     Positivrate.PCR = (Faelle.neu / Tests.PCR.neu) * 100,
@@ -96,10 +101,10 @@ ages.timeline.reff <- ages.timeline |>
   select(Testdatum, Bundesland, Faelle.neu) |>
   group_by(Bundesland) |>
   mutate(
-    r4 = reff.rki.4days(Faelle.neu),
-    r4.now = reff.rki.4days(Faelle.neu, drop.last = FALSE),
-    r7 = reff.rki.7days(Faelle.neu),
-    r7.now = reff.rki.7days(Faelle.neu, drop.last = FALSE),
+    r4 = reff.rki(Faelle.neu, 4),
+    r4.now = reff.rki(Faelle.neu, 4, drop.last = FALSE),
+    r7 = reff.rki(Faelle.neu,4),
+    r7.now = reff.rki(Faelle.neu, 4, drop.last = FALSE),
   )
 
 source("R/05_01_process_data_tables.R")

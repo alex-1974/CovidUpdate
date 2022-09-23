@@ -17,7 +17,7 @@ library(lubridate)
 suppressMessages(source("R/05_process_data.R"))
 ```
 Bis zum `r weekdays(max(ems.ages.bmsgpk.timeline.österreich$Datum))`, den `r max(ems.ages.bmsgpk.timeline.österreich$Datum)` wurden in Österreich insgesamt
-`r as.character(sum(ages.timeline[ages.timeline$Bundesland != "Österreich", ]$Faelle.neu))` positiv getestete Fälle im EMS registriert.
+`r as.character(sum(ages.timeline[ages.timeline$Bundesland == "Österreich", ]$Faelle.neu))` positiv getestete Fälle registriert.
 Davon waren `r round(ages.sex.bundesländer[ages.sex.bundesländer$Bundesland == "Österreich" & ages.sex.bundesländer$Geschlecht == "m", ]$ratio, digits = 2)`% männlich.
 Zuletzt am `r max(bmsgpk.test.österreich$Datum)` betrug die Anzahl an Tests gesamt 
 `r as.character(bmsgpk.test.österreich[bmsgpk.test.österreich$Datum == max(bmsgpk.test.österreich$Datum), ]$Tests.gesamt.neu)` 
@@ -32,12 +32,12 @@ graph.inz7d.österreich.gesamt
 
 Die folgenden Daten stammen aus der EMS Morgenmeldung. Für präzise wissenschaftliche Analysen reicht die Qualität der Daten nicht. Sie fungieren aber als eine Art Frühwarnsystem.
 
-Von  `r weekdays(max(ems.ages.bmsgpk.timeline.österreich$Datum) - 1)`, den `r max(ems.ages.bmsgpk.timeline.österreich$Datum) - 1` bis zum `r weekdays(max(ems.ages.bmsgpk.timeline.österreich$Datum))`, den `r max(ems.ages.bmsgpk.timeline.österreich$Datum)` gab es - laut EMS Morgenmeldung - 
-`r ems.ages.bmsgpk.timeline.österreich[ems.ages.bmsgpk.timeline.österreich$Datum == max(ems.ages.bmsgpk.timeline.österreich$Datum), ]$ems.neu` 
+Von  `r weekdays(max(ems.ages.bmsgpk.timeline.österreich$Datum) - 1)`, den `r max(ems.ages.bmsgpk.timeline.österreich$Datum) - 1` bis zum `r weekdays(max(ems.ages.bmsgpk.timeline.österreich$Datum))`, den `r max(ems.ages.bmsgpk.timeline.österreich$Datum)` gab es - laut AGES - 
+`r ems.ages.bmsgpk.timeline.österreich[ems.ages.bmsgpk.timeline.österreich$Datum == max(ems.ages.bmsgpk.timeline.österreich$Datum), ]$ages.neu` 
 neuregistrierte positive Fälle in Österreich. Am Tag zuvor waren es 
-`r ems.ages.bmsgpk.timeline.österreich[ems.ages.bmsgpk.timeline.österreich$Datum == max(ems.ages.bmsgpk.timeline.österreich$Datum)-1, ]$ems.neu` 
+`r ems.ages.bmsgpk.timeline.österreich[ems.ages.bmsgpk.timeline.österreich$Datum == max(ems.ages.bmsgpk.timeline.österreich$Datum)-1, ]$ages.neu` 
 und am `r weekdays(max(ems.ages.bmsgpk.timeline.österreich$Datum))` vor einer Woche 
-`r ems.ages.bmsgpk.timeline.österreich[ems.ages.bmsgpk.timeline.österreich$Datum == max(ems.ages.bmsgpk.timeline.österreich$Datum)-7, ]$ems.neu` 
+`r ems.ages.bmsgpk.timeline.österreich[ems.ages.bmsgpk.timeline.österreich$Datum == max(ems.ages.bmsgpk.timeline.österreich$Datum)-7, ]$ages.neu` 
 Neuerkrankungen.
 
 ```{r epidemic_curve, echo = FALSE, warning = FALSE, error = FALSE}
@@ -62,17 +62,17 @@ und am `r weekdays(max(ems.ages.bmsgpk.timeline.österreich$Datum))` vor einer W
 pro 100.000 Einwohner.
 
 Die Nettoreproduktionszahl beträgt am `r weekdays(max(ems.ages.bmsgpk.timeline.österreich$Datum))`, den `r max(ems.ages.bmsgpk.timeline.österreich$Datum)` für Österreich
-`r ems.estimate_r.österreich.gesamt[ems.estimate_r.österreich.gesamt$Meldedatum == max(ems.estimate_r.österreich.gesamt$Meldedatum) & ems.estimate_r.österreich.gesamt$Bundesland == "Österreich", ]$r_t_most_likely` (95% CI 
-`r ems.estimate_r.österreich.gesamt[ems.estimate_r.österreich.gesamt$Meldedatum == max(ems.estimate_r.österreich.gesamt$Meldedatum) & ems.estimate_r.österreich.gesamt$Bundesland == "Österreich", ]$r_t_lo`;
-`r ems.estimate_r.österreich.gesamt[ems.estimate_r.österreich.gesamt$Meldedatum == max(ems.estimate_r.österreich.gesamt$Meldedatum) & ems.estimate_r.österreich.gesamt$Bundesland == "Österreich", ]$r_t_hi`).
+`r ages.estimate_r.österreich.gesamt[ages.estimate_r.österreich.gesamt$Testdatum == max(ages.estimate_r.österreich.gesamt$Testdatum) & ages.estimate_r.österreich.gesamt$Bundesland == "Österreich", ]$r_t_most_likely` (95% CI 
+`r ages.estimate_r.österreich.gesamt[ages.estimate_r.österreich.gesamt$Testdatum == max(ages.estimate_r.österreich.gesamt$Testdatum) & ages.estimate_r.österreich.gesamt$Bundesland == "Österreich", ]$r_t_lo`;
+`r ages.estimate_r.österreich.gesamt[ages.estimate_r.österreich.gesamt$Testdatum == max(ages.estimate_r.österreich.gesamt$Testdatum) & ages.estimate_r.österreich.gesamt$Bundesland == "Österreich", ]$r_t_hi`).
 Am Tag zuvor war es 
-`r ems.estimate_r.österreich.gesamt[ems.estimate_r.österreich.gesamt$Meldedatum == max(ems.estimate_r.österreich.gesamt$Meldedatum)-1 & ems.estimate_r.österreich.gesamt$Bundesland == "Österreich", ]$r_t_most_likely` (95% CI
-`r ems.estimate_r.österreich.gesamt[ems.estimate_r.österreich.gesamt$Meldedatum == max(ems.estimate_r.österreich.gesamt$Meldedatum)-1 & ems.estimate_r.österreich.gesamt$Bundesland == "Österreich", ]$r_t_lo`;
-`r ems.estimate_r.österreich.gesamt[ems.estimate_r.österreich.gesamt$Meldedatum == max(ems.estimate_r.österreich.gesamt$Meldedatum)-1 & ems.estimate_r.österreich.gesamt$Bundesland == "Österreich", ]$r_t_hi`)
+`r ages.estimate_r.österreich.gesamt[ages.estimate_r.österreich.gesamt$Testdatum == max(ages.estimate_r.österreich.gesamt$Testdatum)-1 & ages.estimate_r.österreich.gesamt$Bundesland == "Österreich", ]$r_t_most_likely` (95% CI
+`r ages.estimate_r.österreich.gesamt[ages.estimate_r.österreich.gesamt$Testdatum == max(ages.estimate_r.österreich.gesamt$Testdatum)-1 & ages.estimate_r.österreich.gesamt$Bundesland == "Österreich", ]$r_t_lo`;
+`r ages.estimate_r.österreich.gesamt[ages.estimate_r.österreich.gesamt$Testdatum == max(ages.estimate_r.österreich.gesamt$Testdatum)-1 & ages.estimate_r.österreich.gesamt$Bundesland == "Österreich", ]$r_t_hi`)
 , vor einer Woche
-`r ems.estimate_r.österreich.gesamt[ems.estimate_r.österreich.gesamt$Meldedatum == max(ems.estimate_r.österreich.gesamt$Meldedatum)-7 & ems.estimate_r.österreich.gesamt$Bundesland == "Österreich", ]$r_t_most_likely` (95% CI
-`r ems.estimate_r.österreich.gesamt[ems.estimate_r.österreich.gesamt$Meldedatum == max(ems.estimate_r.österreich.gesamt$Meldedatum)-7 & ems.estimate_r.österreich.gesamt$Bundesland == "Österreich", ]$r_t_lo`;
-`r ems.estimate_r.österreich.gesamt[ems.estimate_r.österreich.gesamt$Meldedatum == max(ems.estimate_r.österreich.gesamt$Meldedatum)-7 & ems.estimate_r.österreich.gesamt$Bundesland == "Österreich", ]$r_t_hi`).
+`r ages.estimate_r.österreich.gesamt[ages.estimate_r.österreich.gesamt$Testdatum == max(ages.estimate_r.österreich.gesamt$Testdatum)-7 & ages.estimate_r.österreich.gesamt$Bundesland == "Österreich", ]$r_t_most_likely` (95% CI
+`r ages.estimate_r.österreich.gesamt[ages.estimate_r.österreich.gesamt$Testdatum == max(ages.estimate_r.österreich.gesamt$Testdatum)-7 & ages.estimate_r.österreich.gesamt$Bundesland == "Österreich", ]$r_t_lo`;
+`r ages.estimate_r.österreich.gesamt[ages.estimate_r.österreich.gesamt$Testdatum == max(ages.estimate_r.österreich.gesamt$Testdatum)-7 & ages.estimate_r.österreich.gesamt$Bundesland == "Österreich", ]$r_t_hi`).
 
 # Inzidenzen #
 
@@ -109,16 +109,16 @@ heatmap.r.combined
 
 # Tests #
 
-```{r}
+```{r bmsgpk.test, echo = FALSE, warning = FALSE, error = FALSE}
 graph.bmsgpk.test.österreich
 ```
 
-```{r}
+```{r bmsgpk.test.österreich, echo = FALSE, warning = FALSE, error = FALSE}
 graph.bmsgpk.test.österreich.inz7d
 ```
 
 
-```{r}
+```{r bmsgpk.test.bundesländer, echo = FALSE, warning = FALSE, error = FALSE}
 graph.bmsgpk.test.bundesländer.inz7d
 ```
 
@@ -131,20 +131,20 @@ graph.hospitalisierung.last
 
 # Reff #
 
-```{r}
-graph.ems.estimate_r.österreich.last
+```{r r.österreich, echo = FALSE, warning = FALSE, error = FALSE}
+graph.ages.estimate_r.österreich.last
 ```
 
-```{r}
+```{r r.österreich.nativ, echo = FALSE, warning = FALSE, error = FALSE}
 graph.ages.reff.österreich.nativ
 ```
 
-```{r}
+```{r r.österreich.last, echo = FALSE, warning = FALSE, error = FALSE}
 graph.ages.estimate_r.österreich.last
 ```
 
 
-```{r}
+```{r r.österreich.bundesländerv, echo = FALSE, warning = FALSE, error = FALSE}
 graph.ages.reff.bundesländer.nativ
 ```
 
@@ -160,7 +160,7 @@ verfügbar nach 9:30
 * AGES (Daten aus EMS verbucht zum Diagnose- bzw. Testdatum)  
 verfügbar nach 14 Uhr
 
-```{r}
+```{r data.lastUpdate, echo = FALSE, warning = FALSE, error = FALSE}
 upDate <- tibble(
   Datensatz = c("ages.timeline", "ages.altersgruppe", "ages.hospitalisierung", "ems.timeline", "bmsgpk.timeline", "ages.reff.österreich", "ages.reff.bundesländer"),
   lastUpdated = c(

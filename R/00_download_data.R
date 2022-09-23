@@ -34,7 +34,8 @@ warning = function(w) {
 })
 
 ## Extract CovidFaelle_Altersgruppe.csv
-read_delim(paste0(tempdir(), "/CovidFaelle_Altersgruppe.csv"), delim=";") |>
+tryCatch({
+.ages.altersgruppe <- read_delim(paste0(tempdir(), "/CovidFaelle_Altersgruppe.csv"), delim=";") |>
   select(
     Testdatum = Time, Altersgruppe, Bundesland, Einwohner = AnzEinwohner, Geschlecht, Faelle.cumsum = Anzahl, Genesen.cumsum = AnzahlGeheilt, Gestorben.cumsum = AnzahlTot
   ) |>
@@ -47,6 +48,17 @@ read_delim(paste0(tempdir(), "/CovidFaelle_Altersgruppe.csv"), delim=";") |>
     Gestoben.neu = Gestorben.cumsum - lag(Gestorben.cumsum, order_by = Testdatum)
   ) |>
   write_csv(paste0(.path, "ages.altersgruppe.csv"))
+print(tail(.ages.altersgruppe))
+message("Successfully extracted AGES data")
+},
+error = function(e) { 
+  message("Error extracting AGES Altersgruppe data!")
+  print(e)
+},
+warning = function(w) {
+  message("Warning extracting AGES Altersgruppe data!")
+  print(w)
+})
 
 ages.timeline.rules <- . %>%
   chain_start %>% 
@@ -61,7 +73,8 @@ ages.timeline.rules <- . %>%
   chain_end
 
 ## Extract CovidFaelle_Timeline.csv
-read_delim(paste0(tempdir(), "/CovidFaelle_Timeline.csv"), delim=";") |>
+tryCatch({
+.ages.timeline <- read_delim(paste0(tempdir(), "/CovidFaelle_Timeline.csv"), delim=";") |>
   select(
     Testdatum = Time, Bundesland, Einwohner = AnzEinwohner, Faelle.neu = AnzahlFaelle, Genesen.neu = AnzahlGeheiltTaeglich, Gestorben.neu = AnzahlTotTaeglich
   ) |>
@@ -70,9 +83,21 @@ read_delim(paste0(tempdir(), "/CovidFaelle_Timeline.csv"), delim=";") |>
   ) %>%
   #ages.timeline.rules |>
   write_csv(paste0(.path, "ages.timeline.csv"))
+print(tail(.ages.timeline))
+message("Successfully extracted AGES timeline data")
+},
+error = function(e) { 
+  message("Error extracting AGES timeline data!")
+  print(e)
+},
+warning = function(w) {
+  message("Warning extracting AGES timeline data!")
+  print(w)
+})
 
 ## Extract CovidFallzahlen.csv
-read_delim(paste0(tempdir(), "/CovidFallzahlen.csv"), delim=";") |>
+tryCatch({
+.ages.fallzahlen <- read_delim(paste0(tempdir(), "/CovidFallzahlen.csv"), delim=";") |>
   select(
     Meldedatum = Meldedat, Bundesland, Tests.gesamt = TestGesamt, 
     Normalstation.Faelle = FZHosp,  Normalstation.Frei = FZHospFree, ICU.Faelle = FZICU, ICU.Frei = FZICUFree
@@ -83,6 +108,17 @@ read_delim(paste0(tempdir(), "/CovidFallzahlen.csv"), delim=";") |>
     ICU.Gesamt = ICU.Faelle + ICU.Frei
   ) |>
   write_csv(paste0(.path, "ages.fallzahlen.csv"))
+print(tail(.ages.fallzahlen))
+message("Successfully extracted AGES Fallzahlen data")
+},
+error = function(e) { 
+  message("Error extracting AGES Fallzahlen data!")
+  print(e)
+},
+warning = function(w) {
+  message("Warning extracting AGES Fallzahlen data!")
+  print(w)
+})
 
 ## Extract Hospitalisierung.csv
 read_delim(paste0(tempdir(), "/Hospitalisierung.csv"), delim=";") |>
@@ -154,12 +190,12 @@ tryCatch({
 download.file("https://info.gesundheitsministerium.gv.at/data/timeline-faelle-bundeslaender.csv", destfile=temp, method="wget", quiet = TRUE)
 .bmsgpk.timeline <-read_delim(temp, delim=";") |>
   select(
-    Meldedatum = Datum, Bundesland = Name, Tests.gesamt.cumsum = Testungen, Tests.AG.cumsum = TestungenAntigen, Tests.PCR.cumsum = TestungenPCR, Faelle.cumsum = BestaetigteFaelleBundeslaender, Genesen.cumsum = Genesen, Gestorben.cumsum = Todesfaelle, Hospitalisierung, Intensivstation
+    Meldedatum = Datum, Bundesland = Name, Tests.gesamt.cumsum = Testungen, Tests.AG.cumsum = TestungenAntigen, Tests.PCR.cumsum = TestungenPCR
   ) |>
   group_by(Bundesland) |>
   mutate(
     Meldedatum = as_date(ymd_hms(Meldedatum)),
-    Faelle.neu = Faelle.cumsum - lag(Faelle.cumsum, order_by = Meldedatum),
+    #Faelle.neu = Faelle.cumsum - lag(Faelle.cumsum, order_by = Meldedatum),
     Tests.gesamt.neu = Tests.gesamt.cumsum - lag(Tests.gesamt.cumsum, order_by = Meldedatum),
     Tests.AG.neu = Tests.AG.cumsum - lag(Tests.AG.cumsum, order_by = Meldedatum),
     Tests.PCR.neu = Tests.PCR.cumsum - lag(Tests.PCR.cumsum, order_by = Meldedatum)

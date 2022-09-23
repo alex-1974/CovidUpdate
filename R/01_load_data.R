@@ -49,9 +49,3 @@ ages.reff.bundesländer <- read_csv(paste0(.path, "ages.reff.bundesländer.csv")
   ) |>
   select(Datum = Meldedatum, ems.neu = Faelle.neu)
 
-.bmsgpk.timeline.at <- bmsgpk.timeline |>
-  filter(
-    Bundesland == "Österreich"
-  ) |>
-  select(Datum = Meldedatum, bmsgpk.neu = Faelle.neu)
-

@@ -3,14 +3,16 @@ library(lubridate)
 
 source("R/libmath.R")
 source("R/01_load_data.R")
+options(dplyr.summarise.inform = FALSE)
+
 .rds.path <- "rds/"
 
 # Combine ems, ages and bmsgpk data
 ems.ages.bmsgpk.timeline <- purrr::reduce(
   list(
     ages.timeline |> select(Datum = Testdatum, Bundesland, Einwohner, ages.neu = Faelle.neu),
-    ems.timeline |> select(Datum = Meldedatum, Bundesland, ems.neu = Faelle.neu),
-    bmsgpk.timeline |> select(Datum = Meldedatum, Bundesland, bmsgpk.neu = Faelle.neu)
+    ems.timeline |> select(Datum = Meldedatum, Bundesland, ems.neu = Faelle.neu)
+    #bmsgpk.timeline |> select(Datum = Meldedatum, Bundesland, bmsgpk.neu = Faelle.neu)
   ),
   dplyr::full_join,
   by = c("Datum", "Bundesland")
@@ -22,8 +24,8 @@ ems.ages.bmsgpk.timeline <- purrr::reduce(
       TRUE ~ Einwohner
     ),
     ages.inc = notification_rate_7d(ages.neu, Einwohner),
-    ems.inc = notification_rate_7d(ems.neu, Einwohner),
-    bmsgpk.inc = notification_rate_7d(bmsgpk.neu, Einwohner)
+    ems.inc = notification_rate_7d(ems.neu, Einwohner)
+    #bmsgpk.inc = notification_rate_7d(bmsgpk.neu, Einwohner)
   )
 saveRDS(ems.ages.bmsgpk.timeline, file = paste0(.rds.path, "ems_ages_bmsgpk_timeline.rds"))
 
@@ -39,10 +41,10 @@ ages.estimate_r.österreich.gesamt <- ages.timeline |>
   estimate_r(cases = Faelle.neu, date = Testdatum, groupby = Bundesland, intervall = 7)
 saveRDS(ages.estimate_r.österreich.gesamt, file = paste0(.rds.path, "ages_reff_österreich_gesamt.rds"))
 
-message("Estimate ems.estimate_r.österreich.gesamt")
-ems.estimate_r.österreich.gesamt <- ems.timeline |>
-  estimate_r(cases = Faelle.neu, date = Meldedatum, groupby = Bundesland, intervall = 7)
-saveRDS(ems.estimate_r.österreich.gesamt, file = paste0(.rds.path, "ems_reff_österreich_gesamt.rds"))
+message("Estimate ems.estimate_r.österreich.gesamt ausgesetzt")
+#ems.estimate_r.österreich.gesamt <- ems.timeline |>
+#  estimate_r(cases = Faelle.neu, date = Meldedatum, groupby = Bundesland, intervall = 7)
+#saveRDS(ems.estimate_r.österreich.gesamt, file = paste0(.rds.path, "ems_reff_österreich_gesamt.rds"))
 
 message("Estimate ages.estimate_r.österreich.altersgruppe.gesamt")
 ages.estimate_r.österreich.altersgruppe.gesamt <- ages.altersgruppe |> 
@@ -69,13 +71,6 @@ timeline.covid <- tribble(
   "3. Lockdown",          "full",  "Lockdowns", "2020-12-26", "2021-02-21",
   "Lockdown, W, Bgld, NÖ","light", "Lockdowns", "2021-04-01", "2021-05-03",
   "4. Lockdown",          "full",  "Lockdowns", "2021-11-21", "2021-12-11"
-) |>
-  mutate(
-    color = case_when(
-      subgroup == "full" ~ mycolors["blue"],
-      subgroup == "light" ~ mycolors["skyBlue"],
-      TRUE ~ mycolors["blueishGreen"]
-    )
-  )
+) 
 saveRDS(timeline.covid, file = paste0(.rds.path, "timeline_covid.rds"))
 

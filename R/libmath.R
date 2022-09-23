@@ -63,7 +63,7 @@ c(1:10) |> zoo::rollmean(3) |>
 reff.rki.4days = reff.rki.nativ(4)
 reff.rki.4days
 reff.rki.4days(c(1:20))
-`reff.rki.7days = reff.rki.nativ(7)
+reff.rki.7days = reff.rki.nativ(7)
 parse_expr("result <- zoo::rollsum(x = values, k = !!intervall, align = 'right', fill = NA) / zoo::rollsum(x = lag(values, !!intervall), k = !!intervall, align = 'right', fill = NA)")
 ########################################################
 # Estimate Reff and CI
