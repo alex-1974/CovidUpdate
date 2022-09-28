@@ -126,6 +126,25 @@ graph.inz7d.bundesländer.log.last <- graph.inz7d.bundesländer.gesamt +
 ggsave("graph_inz7d_bundesländer_log_last.png", path = img.path, scale = 2, bg = "white")
 graph.inz7d.bundesländer.log.last
 
+graph.inz7d.rate <- ages.inz7d.österreich.gesamt |>
+  filter(
+    Bundesland == "Österreich",
+    Datum >= as_date("2020-05-01")
+  ) |>
+  mutate(
+    ratio = Faelle / lag(Faelle, 7, order_by = Datum),
+  ) |>
+  ggplot(aes(y = ratio, x = Datum)) +
+  geom_line() +
+  geom_hline(yintercept = 1) +
+  labs(
+    title= "Verhältnis der 7-Tages-Inzidenz zur Vorwoche",
+    subtitle = "",
+    caption = "Quelle: Daten des AGES Dashboards",
+    x="", y = "Inzidenz") +
+  theme_covid()
+ggsave("graph_inz7d_rate.png", path = img.path, scale = 2, bg = "white")
+
 ###########################
 # Hospitalisierung
 ###########################
@@ -337,8 +356,13 @@ graph.ages.estimate_r.österreich.altersgruppe.last <- ages.estimate_r.österrei
   ggplot(aes(x = Testdatum, y = r_t_most_likely, group = Altersgruppe, color = Altersgruppe)) +
   geom_line() +
   geom_hline(yintercept = 1) +
-  labs(x = "", y = "Nettoreproduktionszahl") +
+  labs(
+    title="Nettoreproduktionszahlen der Altersgruppen in Österreich",
+    subtitle = paste0("Verlauf seit ", as_date(period.from)),
+    caption = paste0("Quelle: Daten der AGES (Stand ", as_date(max(ages.estimate_r.österreich.altersgruppe.gesamt$Testdatum)), ")"),
+    x="", y = "Nettoreproduktionszahl") +
   theme_covid()
+graph.ages.estimate_r.österreich.altersgruppe.last
 ggsave("graph_reff_altersgruppe_last.png", path = img.path, scale = 2, bg = "white")
 
 ############################

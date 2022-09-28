@@ -53,12 +53,12 @@ graph.combined
 
 
 
-Die 7-Tages-Inzidenz der EMS Daten beträgt am `r weekdays(max(ems.ages.bmsgpk.timeline.österreich$Datum))`, den `r max(ems.ages.bmsgpk.timeline.österreich$Datum)` für Österreich 
-`r round(ems.ages.bmsgpk.timeline.österreich[ems.ages.bmsgpk.timeline.österreich$Datum == max(ems.ages.bmsgpk.timeline.österreich$Datum), ]$ems.inc, digits = 0)` 
+Die 7-Tages-Inzidenz der AGES Daten beträgt am `r weekdays(max(ems.ages.bmsgpk.timeline.österreich$Datum))`, den `r max(ems.ages.bmsgpk.timeline.österreich$Datum)` für Österreich 
+`r round(ems.ages.bmsgpk.timeline.österreich[ems.ages.bmsgpk.timeline.österreich$Datum == max(ems.ages.bmsgpk.timeline.österreich$Datum), ]$ages.inc, digits = 0)` 
 pro 100.000 Einwohner. Am Tag zuvor waren es
-`r round(ems.ages.bmsgpk.timeline.österreich[ems.ages.bmsgpk.timeline.österreich$Datum == max(ems.ages.bmsgpk.timeline.österreich$Datum)-1, ]$ems.inc, digits = 0)`
+`r round(ems.ages.bmsgpk.timeline.österreich[ems.ages.bmsgpk.timeline.österreich$Datum == max(ems.ages.bmsgpk.timeline.österreich$Datum)-1, ]$ages.inc, digits = 0)`
 und am `r weekdays(max(ems.ages.bmsgpk.timeline.österreich$Datum))` vor einer Woche 
-`r round(ems.ages.bmsgpk.timeline.österreich[ems.ages.bmsgpk.timeline.österreich$Datum == max(ems.ages.bmsgpk.timeline.österreich$Datum)-7, ]$ems.inc, digits = 0)` 
+`r round(ems.ages.bmsgpk.timeline.österreich[ems.ages.bmsgpk.timeline.österreich$Datum == max(ems.ages.bmsgpk.timeline.österreich$Datum)-7, ]$ages.inc, digits = 0)` 
 pro 100.000 Einwohner.
 
 Die Nettoreproduktionszahl beträgt am `r weekdays(max(ems.ages.bmsgpk.timeline.österreich$Datum))`, den `r max(ems.ages.bmsgpk.timeline.österreich$Datum)` für Österreich
@@ -78,8 +78,6 @@ Am Tag zuvor war es
 
 Die folgenden Analysen verwenden die Daten der AGES.
 
-
-
 ```{r  inzidenz_österreich_last, echo = FALSE, warning = FALSE, error = FALSE}
 graph.inz7d.österreich.last
 ```
@@ -88,10 +86,16 @@ graph.inz7d.österreich.last
 graph.inz7d.österreich.log.last
 ```
 
+
+
 ## Inzidenzen in den Bundesländern ##
 
 ```{r bundesländer.inc7d, echo=FALSE, warning = FALSE, error = FALSE}
 table.ems.ages.bmsgpk.timeline
+```
+
+```{r}
+table.ages.estimate_r.bundesländer
 ```
 
 ```{r inzidenz_bundesländer, echo = FALSE, warning=FALSE, error=FALSE}
@@ -102,8 +106,18 @@ graph.inz7d.bundesländer.last
 graph.inz7d.bundesländer.log.last
 ```
 
+## Inzidenzen in den Altersgruppen ##
+
+```{r}
+table.ages.estimate_r.altersgruppe
+```
+
 ```{r heatmap.r, echo = FALSE, warning = FALSE, error = FALSE}
 heatmap.r.combined
+```
+
+```{r}
+graph.ages.estimate_r.österreich.altersgruppe.last
 ```
 
 
@@ -120,6 +134,9 @@ graph.bmsgpk.test.österreich.inz7d
 
 ```{r bmsgpk.test.bundesländer, echo = FALSE, warning = FALSE, error = FALSE}
 graph.bmsgpk.test.bundesländer.inz7d
+```
+```{r}
+graph.bmsgpk.test.positivrate.österreich
 ```
 
 

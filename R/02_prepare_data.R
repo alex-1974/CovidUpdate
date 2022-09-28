@@ -6,6 +6,21 @@ source("R/01_load_data.R")
 options(dplyr.summarise.inform = FALSE)
 
 .rds.path <- "rds/"
+.path.data <- "data/"
+
+ages.altersgruppe <- ages.altersgruppe |>
+  group_by(Altersgruppe, Bundesland, Geschlecht) |>
+  mutate(
+    Faelle.neu = Faelle.cumsum - lag(Faelle.cumsum, order_by = Testdatum),
+    Genesen.neu = Genesen.cumsum - lag(Genesen.cumsum, order_by = Testdatum),
+    Gestorben.neu = Gestorben.cumsum - lag(Gestorben.cumsum, order_by = Testdatum),
+    Faelle.inz7d = notification_rate_7d(Faelle.neu, pop = Einwohner),
+    Genesen.inz7d = notification_rate_7d(Genesen.neu, pop = Einwohner),
+    Gestorben.inz7d = notification_rate_7d(Gestorben.neu, pop = Einwohner),
+    Faelle.inz7d.rate = Faelle.inz7d / lag(Faelle.inz7d, 7),
+    Erkrankt.Genesen.rate = Faelle.inz7d / (Genesen.inz7d+Gestorben.inz7d)
+  ) |>
+  write_csv(paste0(.path.data, "ages.altersgruppe.csv"))
 
 # Combine ems, ages and bmsgpk data
 ems.ages.bmsgpk.timeline <- purrr::reduce(
@@ -24,7 +39,7 @@ ems.ages.bmsgpk.timeline <- purrr::reduce(
       TRUE ~ Einwohner
     ),
     ages.inc = notification_rate_7d(ages.neu, Einwohner),
-    ems.inc = notification_rate_7d(ems.neu, Einwohner)
+    #ems.inc = notification_rate_7d(ems.neu, Einwohner)
     #bmsgpk.inc = notification_rate_7d(bmsgpk.neu, Einwohner)
   )
 saveRDS(ems.ages.bmsgpk.timeline, file = paste0(.rds.path, "ems_ages_bmsgpk_timeline.rds"))
