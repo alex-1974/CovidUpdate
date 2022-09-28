@@ -39,6 +39,9 @@ tryCatch({
   select(
     Testdatum = Time, Altersgruppe, Bundesland, Einwohner = AnzEinwohner, Geschlecht, Faelle.cumsum = Anzahl, Genesen.cumsum = AnzahlGeheilt, Gestorben.cumsum = AnzahlTot
   ) |>
+  mutate(
+    Testdatum = as_date(dmy_hms(Testdatum))
+  ) |>
   write_csv(paste0(.path, "ages.altersgruppe.csv"))
 print(tail(.ages.altersgruppe))
 message("Successfully extracted AGES data")
