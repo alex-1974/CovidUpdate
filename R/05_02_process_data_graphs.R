@@ -141,10 +141,20 @@ graph.inz7d.rate <- ages.inz7d.österreich.gesamt |>
     title= "Verhältnis der 7-Tages-Inzidenz zur Vorwoche",
     subtitle = "",
     caption = "Quelle: Daten des AGES Dashboards",
-    x="", y = "Inzidenz") +
+    x="", y = "Inzidenzrate") +
   theme_covid()
 ggsave("graph_inz7d_rate.png", path = img.path, scale = 2, bg = "white")
 
+graph.inz7d.rate.last <- graph.inz7d.rate +
+  coord_cartesian(
+    xlim = as_date(c(.inz7d.start, now2 )),
+   # ylim = c(0, max(ages.inz7d.österreich.gesamt[ages.inz7d.österreich.gesamt$Datum >= .inz7d.start, ]$ratio, na.rm = TRUE) )
+  ) +
+  labs(title = "Verhältnis der 7-Tages-Inzidenz zur Vorwoche",
+       subtitle = paste0("Inzidenzrate seit ", as_date(.inz7d.start)),
+       caption = paste0("Quelle: Daten der AGES (Stand ", as_date(max(ages.inz7d.österreich.gesamt$Datum)), ")")
+  ) 
+graph.inz7d.rate.last
 ###########################
 # Hospitalisierung
 ###########################

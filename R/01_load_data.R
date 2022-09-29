@@ -15,7 +15,7 @@ ages.timeline <- read_csv(paste0(.path, "ages.timeline.csv")) |>
   )
 ages.altersgruppe <- read_csv(paste0(.path, "ages.altersgruppe.csv")) |> 
   mutate(
-    Testdatum = as_date(dmy_hms(Testdatum)),
+    #Testdatum = as_date(dmy(Testdatum)), 
     Bundesland = factor(Bundesland, levels = bundesländer.fct, ordered = TRUE),
     Altersgruppe = factor(Altersgruppe, levels = altersgruppe.fct, ordered = TRUE),
     Geschlecht = factor(str_to_lower(Geschlecht), levels = sex.fct)

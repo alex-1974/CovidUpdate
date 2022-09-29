@@ -38,7 +38,7 @@ table.ages.estimate_r.bundesländer <- ages.estimate_r.österreich.gesamt |>
     format = "latex") |>
   kable_styling(full_width = F) |>
   add_header_above(c(" ", " ",  "Änderung seit" = 2)) |>
-  save_kable(file = "~/CovidR/Covid Update/img/table_ages_reff.jpg", size = 2)
+  save_kable(file = "~/CovidR/Covid Update/img/table_ages_reff.pdf", size = 2)
 
 table.ages.estimate_r.altersgruppe <- ages.estimate_r.österreich.altersgruppe.gesamt |>
   filter(
