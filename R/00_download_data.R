@@ -5,13 +5,12 @@
 #######################
 
 library(tidyverse)
-library(lubridate)
+#library(lubridate)
 library(assertr)
 
+source("R/config.R")
+
 temp <- tempfile()
-.path <-"data/"
-bundesländer.list <- c("Wien", "Niederösterreich", "Oberösterreich", "Burgenland", "Steiermark", "Tirol", "Kärnten", "Vorarlberg", "Salzburg")
-date_range <- seq(as_date("2020-01-01"), as_date(now()), by = 1)
 
 ##################
 # AGES
@@ -35,16 +34,25 @@ warning = function(w) {
 
 ## Extract CovidFaelle_Altersgruppe.csv
 tryCatch({
-.ages.altersgruppe <- read_delim(paste0(tempdir(), "/CovidFaelle_Altersgruppe.csv"), delim=";") |>
+ages.altersgruppe <- read_delim(paste0(tempdir(), "/CovidFaelle_Altersgruppe.csv"), delim=";") |>
   select(
     Testdatum = Time, Altersgruppe, Bundesland, Einwohner = AnzEinwohner, Geschlecht, Faelle.cumsum = Anzahl, Genesen.cumsum = AnzahlGeheilt, Gestorben.cumsum = AnzahlTot
-  ) |>
-  mutate(
-    Testdatum = as_date(dmy_hms(Testdatum))
-  ) |>
-  write_csv(paste0(.path, "ages.altersgruppe.csv"))
-print(tail(.ages.altersgruppe))
-message("Successfully extracted AGES data")
+  ) %>%
+  chain_start %>%
+  verify(nrow(.) > 0) %>%
+  verify(as_date(dmy_hms(Testdatum)) > as_date("2020-01-01") & as_date(dmy_hms(Testdatum)) < now()) %>%
+  assert(in_set(c("Österreich", bundesländer.list)), Bundesland) %>% 
+  assert(in_set(altersgruppe.list), Altersgruppe) %>%
+  assert(in_set(c("M","W")), Geschlecht) %>%
+  verify(Einwohner >= 0) %>%
+  verify(Faelle.cumsum >= 0) %>%
+  verify(Genesen.cumsum >= 0) %>%
+  verify(Gestorben.cumsum >= 0) %>%
+  #verify(all(ages.altersgruppe |> count(Altersgruppe,Bundesland, Geschlecht,Testdatum) |> select(n) == 1)) %>%
+  chain_end
+
+print(tail(ages.altersgruppe))
+message("Successfully extracted AGES Altersgruppe data")
 },
 error = function(e) { 
   message("Error extracting AGES Altersgruppe data!")
@@ -55,30 +63,24 @@ warning = function(w) {
   print(w)
 })
 
-ages.timeline.rules <- . %>%
-  chain_start %>% 
+## Extract CovidFaelle_Timeline.csv
+tryCatch({
+ages.timeline <- read_delim(paste0(tempdir(), "/CovidFaelle_Timeline.csv"), delim=";") |>
+  select(
+    Testdatum = Time, Bundesland, Einwohner = AnzEinwohner, Faelle.neu = AnzahlFaelle, Genesen.neu = AnzahlGeheiltTaeglich, Gestorben.neu = AnzahlTotTaeglich
+  )  %>%
+  chain_start %>%
   verify(nrow(.) > 0) %>%
-  verify(Testdatum > as_date("2020-01-01") & Testdatum < now()) %>%
+  #verify(Testdatum > as_date("2020-01-01") & Testdatum < now()) %>%
   assert(in_set(c("Österreich", bundesländer.list)), Bundesland) %>%
   verify(Einwohner >= 0) %>%
   verify(Faelle.neu >= 0) %>%
   verify(Genesen.neu >= 0) %>%
   verify(Gestorben.neu >= 0) %>%
-  verify(all(ages.timeline |> count(Bundesland, Testdatum) |> select(n) == 1)) %>%
+  #verify(all(ages.timeline |> count(Bundesland, Testdatum) |> select(n) == 1)) %>%
   chain_end
 
-## Extract CovidFaelle_Timeline.csv
-tryCatch({
-.ages.timeline <- read_delim(paste0(tempdir(), "/CovidFaelle_Timeline.csv"), delim=";") |>
-  select(
-    Testdatum = Time, Bundesland, Einwohner = AnzEinwohner, Faelle.neu = AnzahlFaelle, Genesen.neu = AnzahlGeheiltTaeglich, Gestorben.neu = AnzahlTotTaeglich
-  ) |>
-  mutate(
-    Testdatum = as_date(dmy_hms(Testdatum))
-  ) %>%
-  #ages.timeline.rules |>
-  write_csv(paste0(.path, "ages.timeline.csv"))
-print(tail(.ages.timeline))
+print(tail(ages.timeline))
 message("Successfully extracted AGES timeline data")
 },
 error = function(e) { 
@@ -92,18 +94,12 @@ warning = function(w) {
 
 ## Extract CovidFallzahlen.csv
 tryCatch({
-.ages.fallzahlen <- read_delim(paste0(tempdir(), "/CovidFallzahlen.csv"), delim=";") |>
+ages.fallzahlen <- read_delim(paste0(tempdir(), "/CovidFallzahlen.csv"), delim=";") |>
   select(
     Meldedatum = Meldedat, Bundesland, Tests.gesamt = TestGesamt, 
     Normalstation.Faelle = FZHosp,  Normalstation.Frei = FZHospFree, ICU.Faelle = FZICU, ICU.Frei = FZICUFree
-  ) |>
-  mutate(
-    Meldedatum = dmy(Meldedatum),
-    Normalstation.Gesamt = Normalstation.Faelle + Normalstation.Frei,
-    ICU.Gesamt = ICU.Faelle + ICU.Frei
-  ) |>
-  write_csv(paste0(.path, "ages.fallzahlen.csv"))
-print(tail(.ages.fallzahlen))
+  )
+print(tail(ages.fallzahlen))
 message("Successfully extracted AGES Fallzahlen data")
 },
 error = function(e) { 
@@ -116,74 +112,34 @@ warning = function(w) {
 })
 
 ## Extract Hospitalisierung.csv
-read_delim(paste0(tempdir(), "/Hospitalisierung.csv"), delim=";") |>
+tryCatch({
+ages.hospitalisierung <- read_delim(paste0(tempdir(), "/Hospitalisierung.csv"), delim=";") |>
   select(
     Meldedatum, Bundesland, Tests.gesamt = TestGesamt, 
     Normalbetten.belegt = NormalBettenBelCovid19, 
     ICU.belegt.Cov19 = IntensivBettenBelCovid19, ICU.belegt.nichtCov19 = IntensivBettenBelNichtCovid19, ICU.frei = IntensivBettenFrei, ICU.kapazität = IntensivBettenKapGes
-  ) |>
-  mutate(
-    Meldedatum = as_date(dmy_hms(Meldedatum))
-  ) |>
-  write_csv(paste0(.path, "ages.hospitalisierung.csv"))
-
-
-####################
-# EMS
-####################
-
-
-ems.rules <- . %>%
-  chain_start %>% 
-  verify(nrow(.) > 0) %>%
-  verify(Meldedatum > as_date("2020-01-01") & Meldedatum < now()) %>%
-  assert(in_set(c("Österreich", bundesländer.list)), Bundesland) %>%
-  verify(Faelle.cumsum > 0) %>%
-  verify(all(ems.timeline |> count(Bundesland, Meldedatum) |> select(n) == 1)) %>%
-  chain_end
-
-tryCatch({
-download.file("https://info.gesundheitsministerium.gv.at/data/timeline-faelle-ems.csv", destfile=temp, method="wget", quiet = TRUE)
-.ems.timeline <- read_delim(temp, delim=";", progress = FALSE) |>
-  select(
-    Meldedatum = Datum, Bundesland = Name, Faelle.cumsum = BestaetigteFaelleEMS
-  ) |>
-  group_by(Bundesland) |>
-  mutate(
-    Meldedatum = as_date(ymd_hms(Meldedatum)),
-    Faelle.neu = Faelle.cumsum - lag(Faelle.cumsum, order_by = Meldedatum)
-  ) %>%
-  #ems.rules |>
-  write_csv(paste0(.path, "ems.timeline.csv"))
-
-print(tail(.ems.timeline))
-message("Successfully downloaded EMS data")
+  ) 
+print(tail(ages.hospitalisierung))
+message("Successfully extracted AGES Hospitalisierung data")
 },
-error = function(e) {
-  message("Error downloading EMS data!")
+error = function(e) { 
+  message("Error extracting AGES Hospitalisierung data!")
   print(e)
 },
 warning = function(w) {
-  message("Warning downloading EMS data!")
+  message("Warning extracting AGES Hospitalisierung data!")
   print(w)
 })
+
 
 #######################
 # Gesundheitsministerium
 #######################
 
-bmsgpk.rules <- . %>%
-  chain_start %>% 
-  verify(nrow(.) > 0) %>%
-  verify(Meldedatum >= as_date("2020-01-01") & Meldedatum <= now()) %>%
-  assert(in_set(c("Österreich", bundesländer.list)), Bundesland) %>%
-  verify(Faelle.cumsum > 0) %>%
-  verify(all(bmsgpk.timeline |> count(Bundesland, Meldedatum) |> select(n) == 1)) %>%
-  chain_end
 
 tryCatch({
 download.file("https://info.gesundheitsministerium.gv.at/data/timeline-faelle-bundeslaender.csv", destfile=temp, method="wget", quiet = TRUE)
-.bmsgpk.timeline <-read_delim(temp, delim=";") |>
+bmsgpk.timeline <-read_delim(temp, delim=";") |>
   select(
     Meldedatum = Datum, Bundesland = Name, Tests.gesamt.cumsum = Testungen, Tests.AG.cumsum = TestungenAntigen, Tests.PCR.cumsum = TestungenPCR
   ) |>
@@ -195,10 +151,14 @@ download.file("https://info.gesundheitsministerium.gv.at/data/timeline-faelle-bu
     Tests.AG.neu = Tests.AG.cumsum - lag(Tests.AG.cumsum, order_by = Meldedatum),
     Tests.PCR.neu = Tests.PCR.cumsum - lag(Tests.PCR.cumsum, order_by = Meldedatum)
   ) %>%
-  #bmsgpk.rules |>
-  write_csv(paste0(.path, "BMSGPK.timeline.csv"))
+  chain_start %>% 
+  verify(nrow(.) > 0) %>%
+  verify(Meldedatum >= as_date("2020-01-01") & Meldedatum <= now()) %>%
+  assert(in_set(c("Österreich", bundesländer.list)), Bundesland) %>%
+  #verify(all(bmsgpk.timeline |> count(Bundesland, Meldedatum) |> select(n) == 1)) %>%
+  chain_end
 
-print(tail(.bmsgpk.timeline))
+print(tail(bmsgpk.timeline))
 message("Successfully downloaded BMSGPK timeline data")
 },
 error = function(e) {
@@ -212,15 +172,11 @@ warning = function(w) {
 
 tryCatch({
 download.file("https://info.gesundheitsministerium.gv.at/data/COVID19_vaccination_doses_timeline.csv", destfile=temp, method="wget", quiet = TRUE)
-.bmsgpk.vaccination <- read_delim(temp, delim=";") |>
+bmsgpk.vaccination <- read_delim(temp, delim=";") |>
   select(
-    Meldedatum = date, Bundesland = state_name, Impfstoff = vaccine, Dosis = dose_number, Anzahl.kumulativ = doses_administered_cumulative
-  ) |>
-  mutate(
-    Meldedatum = as_date(ymd_hms(Meldedatum))
-  ) |>
-  write_csv(paste0(.path, "BMSGPK.vaccination.csv"))
-print(tail(.bmsgpk.vaccination))
+    Meldedatum = date, Bundesland = state_name, Impfstoff = vaccine, Dosis = dose_number, Anzahl.cumsum = doses_administered_cumulative
+  ) 
+print(tail(bmsgpk.vaccination))
 message("Successfully downloaded BMSGPK vaccination data")
 },
 error = function(e) {
@@ -238,15 +194,9 @@ warning = function(w) {
 
 tryCatch({
 download.file("https://wissenaktuell.ages.at/fileadmin/AGES2015/Wissen-Aktuell/COVID19/R_eff.csv", destfile=temp, method="wget", quiet = TRUE)
-.ages.reff.österreich <- read_delim(temp, delim=";") |>
-  mutate(
-    Datum = as_date(ymd(Datum)),
-    R_eff = as.numeric(gsub(",", ".", R_eff)),
-    R_eff_lwr = as.numeric(gsub(",", ".", R_eff_lwr)),
-    R_eff_upr = as.numeric(gsub(",", ".", R_eff_upr))
-  ) |>
-  write_csv(paste0(.path, "ages.reff.österreich.csv"))
-print(tail(.ages.reff.österreich))
+ages.reff.österreich <- read_delim(temp, delim=";") 
+ 
+print(tail(ages.reff.österreich))
 message("Successfully downloaded Ages reff Österreich data")
 },
 error = function(e) {
@@ -260,15 +210,9 @@ warning = function(w) {
 
 tryCatch({
 download.file("https://wissenaktuell.ages.at/fileadmin/AGES2015/Wissen-Aktuell/COVID19/R_eff_bundesland.csv", destfile=temp, method="wget", quiet = TRUE)
-.ages.reff.bundesländer <- read_delim(temp, delim=";", locale = locale(encoding = "latin1")) |>
-  mutate(
-    Datum = as_date(ymd(Datum)),
-    R_eff = as.numeric(gsub(",", ".", R_eff)),
-    R_eff_lwr = as.numeric(gsub(",", ".", R_eff_lwr)),
-    R_eff_upr = as.numeric(gsub(",", ".", R_eff_upr))
-  ) |>
-  write_csv(paste0(.path, "ages.reff.bundesländer.csv"))
-print(tail(.ages.reff.bundesländer))
+ages.reff.bundesländer <- read_delim(temp, delim=";", locale = locale(encoding = "latin1")) 
+  
+print(tail(ages.reff.bundesländer))
 message("Successfully downloaded Ages reff Bundesländer data")
 },
 error = function(e) {
