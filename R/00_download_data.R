@@ -97,7 +97,7 @@ tryCatch({
 ages.fallzahlen <- read_delim(paste0(tempdir(), "/CovidFallzahlen.csv"), delim=";") |>
   select(
     Meldedatum = Meldedat, Bundesland, Tests.gesamt = TestGesamt, 
-    Normalstation.Faelle = FZHosp,  Normalstation.Frei = FZHospFree, ICU.Faelle = FZICU, ICU.Frei = FZICUFree
+    Normalbetten.belegt.cov19 = FZHosp,  Normalbetten.verfügbar.cov19 = FZHospFree, ICU.belegt.cov19 = FZICU, ICU.verfügbar.cov19 = FZICUFree
   )
 print(tail(ages.fallzahlen))
 message("Successfully extracted AGES Fallzahlen data")
@@ -116,8 +116,8 @@ tryCatch({
 ages.hospitalisierung <- read_delim(paste0(tempdir(), "/Hospitalisierung.csv"), delim=";") |>
   select(
     Meldedatum, Bundesland, Tests.gesamt = TestGesamt, 
-    Normalbetten.belegt = NormalBettenBelCovid19, 
-    ICU.belegt.Cov19 = IntensivBettenBelCovid19, ICU.belegt.nichtCov19 = IntensivBettenBelNichtCovid19, ICU.frei = IntensivBettenFrei, ICU.kapazität = IntensivBettenKapGes
+    Normalbetten.belegt.cov19 = NormalBettenBelCovid19, 
+    ICU.belegt.cov19 = IntensivBettenBelCovid19, ICU.belegt.non_cov19 = IntensivBettenBelNichtCovid19, ICU.frei = IntensivBettenFrei, ICU.kapazität = IntensivBettenKapGes
   ) 
 print(tail(ages.hospitalisierung))
 message("Successfully extracted AGES Hospitalisierung data")
@@ -142,14 +142,6 @@ download.file("https://info.gesundheitsministerium.gv.at/data/timeline-faelle-bu
 bmsgpk.timeline <-read_delim(temp, delim=";") |>
   select(
     Meldedatum = Datum, Bundesland = Name, Tests.gesamt.cumsum = Testungen, Tests.AG.cumsum = TestungenAntigen, Tests.PCR.cumsum = TestungenPCR
-  ) |>
-  group_by(Bundesland) |>
-  mutate(
-    Meldedatum = as_date(ymd_hms(Meldedatum)),
-    #Faelle.neu = Faelle.cumsum - lag(Faelle.cumsum, order_by = Meldedatum),
-    Tests.gesamt.neu = Tests.gesamt.cumsum - lag(Tests.gesamt.cumsum, order_by = Meldedatum),
-    Tests.AG.neu = Tests.AG.cumsum - lag(Tests.AG.cumsum, order_by = Meldedatum),
-    Tests.PCR.neu = Tests.PCR.cumsum - lag(Tests.PCR.cumsum, order_by = Meldedatum)
   ) %>%
   chain_start %>% 
   verify(nrow(.) > 0) %>%

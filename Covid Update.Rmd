@@ -14,14 +14,15 @@ output:
 ```{r init, echo = FALSE, warning = FALSE, error = FALSE}
 library(tidyverse)
 library(lubridate)
-suppressMessages(source("R/05_process_data.R"))
+#suppressMessages(source("R/05_process_data.R"))
+
 ```
-Bis zum `r weekdays(max(ems.ages.bmsgpk.timeline.österreich$Datum))`, den `r max(ems.ages.bmsgpk.timeline.österreich$Datum)` wurden in Österreich insgesamt
-`r as.character(sum(ages.timeline[ages.timeline$Bundesland == "Österreich", ]$Faelle.neu))` positiv getestete Fälle registriert.
-Davon waren `r round(ages.sex.bundesländer[ages.sex.bundesländer$Bundesland == "Österreich" & ages.sex.bundesländer$Geschlecht == "m", ]$ratio, digits = 2)`% männlich.
-Zuletzt am `r max(bmsgpk.test.österreich$Datum)` betrug die Anzahl an Tests gesamt 
-`r as.character(bmsgpk.test.österreich[bmsgpk.test.österreich$Datum == max(bmsgpk.test.österreich$Datum), ]$Tests.gesamt.neu)` 
-(`r round(bmsgpk.test.österreich[bmsgpk.test.österreich$Datum == max(bmsgpk.test.österreich$Datum), ]$Tests.gesamt.neu / bmsgpk.test.österreich[bmsgpk.test.österreich$Datum == max(bmsgpk.test.österreich$Datum), ]$Einwohner * 100000, digits = 0)`
+Bis zum `r weekdays(max(ages.timeline.österreich$Datum))`, den `r max(ages.timeline.österreich$Datum)` wurden in Österreich insgesamt
+`r as.character(sum(ages.timeline.österreich$Faelle.neu))` positiv getestete Fälle registriert.
+
+Zuletzt am `r max(testing.österreich$Datum)` betrug die Anzahl an Tests gesamt 
+`r as.character(testing.österreich[testing.österreich$Datum == max(testing.österreich$Datum), ]$Tests.gesamt.neu)` 
+(`r round(testing.österreich[testing.österreich$Datum == max(testing.österreich$Datum), ]$Tests.gesamt.neu / testing.österreich[testing.österreich$Datum == max(testing.österreich$Datum), ]$Einwohner * 100000, digits = 0)`
 pro 100.000 EW) in Österreich.
 
 ```{r inzidenz_österreich_gesamt, echo = FALSE, warning = FALSE, error = FALSE}

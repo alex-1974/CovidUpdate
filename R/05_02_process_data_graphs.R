@@ -4,14 +4,16 @@ library(ggpubr)
 library(vistime)
 
 source("R/theme_covid.R")
+source("R/config.R")
 
 if(!exists("period.from")) {
-} else {
   period.from <- rollback(add_with_rollback(now(),months(-1)), roll_to_first = TRUE)
 }
 now2 <- add_with_rollback(now(),days(+1))
-img.path <- "img"
-rds.path <- "rds/"
+
+ages.timeline.österreich <- ages.timeline |> filter(Bundesland == "Österreich") |> rename(Datum = Testdatum)
+testing.österreich <- testing |> filter(Bundesland == "Österreich")
+hospitalization.österreich <- hospitalization |> filter(Bundesland == "Österreich")
 
 ###################
 # Epicurve Graph
@@ -19,31 +21,28 @@ rds.path <- "rds/"
 
 .epicurve.start <- period.from
 
-graph.epidemiologic_curve <- ages.timeline |>
-  filter(
-    Bundesland == "Österreich",
-  ) |>
-  select(Testdatum, Faelle.neu) |>
-  ggplot(aes(y = Faelle.neu, x = Testdatum)) +
+graph.epidemiologic_curve <- ages.timeline.österreich |>
+  select(Datum, Faelle.neu) |>
+  ggplot(aes(y = Faelle.neu, x = Datum)) +
   geom_bar(stat="identity") +
   #xlim(as.Date(c(.epicurve.start, now()))) +
   labs(
     title="Epidemische Kurve Österreich",
     subtitle = "Absolute Anzahl Neuerkrankter",
-    caption = paste0("Quelle: Daten des EMS (Stand ", as_date(max(ages.timeline$Testdatum)), ")"),
+    caption = paste0("Quelle: Daten des EMS (Stand ", as_date(max(ages.timeline.österreich$Datum)), ")"),
     x="", y = "Neuerkrankte") +
   theme_covid()
 graph.epidemiologic_curve
-ggsave("graph_epidemiologic_curve.png", path = img.path, scale = 2, bg = "white")
+ggsave("graph_epidemiologic_curve.png", path = path.img, scale = 2, bg = "white")
 
 graph.epidemiologic_curve.last <- graph.epidemiologic_curve +
   labs(subtitle = paste0("Absolute Anzahl Neuerkrankter seit ", as_date(.epicurve.start))) +
   coord_cartesian(
     xlim = as_date(c(.epicurve.start, now2)),
-    ylim = (c(0, max(ages.timeline[ages.timeline$Testdatum >= .epicurve.start, ]$Faelle.neu, na.rm = TRUE)))
+    ylim = (c(0, max(ages.timeline.österreich[ages.timeline.österreich$Datum >= .epicurve.start, ]$Faelle.neu, na.rm = TRUE)))
   )
 graph.epidemiologic_curve.last 
-ggsave("graph_epidemiologic_curve.last.png", path = img.path, scale = 2, bg = "white")
+ggsave("graph_epidemiologic_curve.last.png", path = path.img, scale = 2, bg = "white")
 
 
 #########################
@@ -52,9 +51,9 @@ ggsave("graph_epidemiologic_curve.last.png", path = img.path, scale = 2, bg = "w
 
 .inz7d.start <- period.from
 
-graph.inz7d.österreich.gesamt <- ages.inz7d.österreich.gesamt |>
+graph.inz7d.österreich.gesamt <- ages.timeline.österreich |>
   filter(Bundesland == "Österreich") |>
-  ggplot(aes(y = Faelle, x = Datum)) +
+  ggplot(aes(y = Faelle.inz7d, x = Datum)) +
   geom_line(colour = mycolors["blue"]) +
   geom_area(fill=mycolors["blue"], alpha=.2)+
   labs(
@@ -64,34 +63,34 @@ graph.inz7d.österreich.gesamt <- ages.inz7d.österreich.gesamt |>
     x="", y = "Inzidenz") +
   theme_covid()
 graph.inz7d.österreich.gesamt
-ggsave("graph_inz7d_östereich_gesamt.png", path = img.path, scale = 2, bg = "white")
+ggsave("graph_inz7d_östereich_gesamt.png", path = path.img, scale = 2, bg = "white")
 
 graph.inz7d.österreich.last <- graph.inz7d.österreich.gesamt +
   labs(title = "7-Tages-Inzidenz in Österreich",
        subtitle = paste0("7-Tages-Inzidenz pro 100.000 Einwohner seit ", as_date(.inz7d.start)),
-       caption = paste0("Quelle: Daten der AGES (Stand ", as_date(max(ages.timeline$Testdatum)), ")")
+       caption = paste0("Quelle: Daten der AGES (Stand ", as_date(max(ages.timeline.österreich$Datum)), ")")
        ) +
   coord_cartesian(
     xlim = as_date(c(.inz7d.start, now2 )),
-    ylim = c(0, max(ages.inz7d.österreich.gesamt[ages.inz7d.österreich.gesamt$Datum >= .inz7d.start, ]$Faelle, na.rm = TRUE) )
+    ylim = c(0, max(ages.timeline.österreich[ages.timeline.österreich$Datum >= .inz7d.start, ]$Faelle.inz7d, na.rm = TRUE) )
   )
-ggsave("graph_inz7d_östereich_last.png", path = img.path, scale = 2, bg = "white")
+ggsave("graph_inz7d_östereich_last.png", path = path.img, scale = 2, bg = "white")
 graph.inz7d.österreich.last
 
 graph.inz7d.österreich.log.last <- graph.inz7d.österreich.gesamt +
-  scale_y_log10(limits = c(1, max(ages.inz7d.österreich.gesamt[ages.inz7d.österreich.gesamt$Datum >= .inz7d.start, ]$Faelle, na.rm = TRUE) ),
+  scale_y_log10(limits = c(1, max(ages.timeline.österreich[ages.timeline.österreich$Datum >= .inz7d.start, ]$Faelle.inz7d, na.rm = TRUE) ),
                 expand =c(0,0)) +
   coord_cartesian(xlim = as_date(c(.inz7d.start, now2 )) ) +
   labs(
     title= "7-Tages-Inzidenz in Österreich",
     subtitle = paste0("7-Tages-Inzidenz pro 100.000 Einwohner seit ", as_date(.inz7d.start), ", logarithmische Skala"),
-    caption = paste0("Quelle: Daten der AGES (Stand ", as_date(max(ages.timeline$Testdatum)), ")"),
+    caption = paste0("Quelle: Daten der AGES (Stand ", as_date(max(ages.timeline.österreich$Datum)), ")"),
     x="", y = "Inzidenz")
-ggsave("graph_inz7d_östereich_log_last.png", path = img.path, scale = 2, bg = "white")
+ggsave("graph_inz7d_östereich_log_last.png", path = path.img, scale = 2, bg = "white")
 graph.inz7d.österreich.log.last
 
-graph.inz7d.bundesländer.gesamt <- ages.inz7d.bundesländer.gesamt |>
-  ggplot(aes(y = Faelle, x = Testdatum, group = Bundesland, colour = Bundesland)) +
+graph.inz7d.bundesländer.gesamt <- ages.timeline |>
+  ggplot(aes(y = Faelle.inz7d, x = Testdatum, group = Bundesland, colour = Bundesland)) +
   geom_line() +
   labs(
     title= "7-Tages-Inzidenz der Bundesländer",
@@ -99,12 +98,13 @@ graph.inz7d.bundesländer.gesamt <- ages.inz7d.bundesländer.gesamt |>
     caption = "Quelle: Daten des AGES Dashboards",
     x="", y = "Inzidenz") +
   theme_covid()
-ggsave("graph_inz7d_bundesländer_gesamt.png", path = img.path, scale = 2, bg = "white")
+graph.inz7d.bundesländer.gesamt
+ggsave("graph_inz7d_bundesländer_gesamt.png", path = path.img, scale = 2, bg = "white")
 
 graph.inz7d.bundesländer.last <- graph.inz7d.bundesländer.gesamt +
   coord_cartesian(
     xlim = as_date(c(.inz7d.start, now2 )),
-    ylim = c(0, max(ages.inz7d.bundesländer.gesamt[ages.inz7d.bundesländer.gesamt$Testdatum >= .inz7d.start, ]$Faelle, na.rm = TRUE) )
+    ylim = c(0, max(ages.timeline[ages.timeline$Testdatum >= .inz7d.start, ]$Faelle.inz7d, na.rm = TRUE) )
   ) +
   labs(title = "7-Tages-Inzidenz der Bundesländer",
        subtitle = paste0("Inzidenz pro 100.000 Einwohner seit ", as_date(.inz7d.start)),
@@ -112,10 +112,10 @@ graph.inz7d.bundesländer.last <- graph.inz7d.bundesländer.gesamt +
   ) 
 
 graph.inz7d.bundesländer.last
-ggsave("graph_inz7d_bundesländer_last.png", path = img.path, scale = 2, bg = "white")
+ggsave("graph_inz7d_bundesländer_last.png", path = path.img, scale = 2, bg = "white")
 
 graph.inz7d.bundesländer.log.last <- graph.inz7d.bundesländer.gesamt +
-  scale_y_log10(limits = c(1, max(ages.inz7d.österreich.gesamt[ages.inz7d.österreich.gesamt$Datum >= .inz7d.start, ]$Faelle, na.rm = TRUE) ),
+  scale_y_log10(limits = c(1, max(ages.timeline[ages.timeline$Testdatum >= .inz7d.start, ]$Faelle.inz7d, na.rm = TRUE) ),
                 expand =c(0,0)) +
   coord_cartesian(xlim = as_date(c(.inz7d.start, now2 )) ) +
   labs(
@@ -123,16 +123,15 @@ graph.inz7d.bundesländer.log.last <- graph.inz7d.bundesländer.gesamt +
     subtitle = paste0("7-Tages-Inzidenz pro 100.000 Einwohner seit ", as_date(.inz7d.start), ", logarithmische Skala"),
     caption = paste0("Quelle: Daten der AGES (Stand ", as_date(max(ages.timeline$Testdatum)), ")"),
     x="", y = "Inzidenz")
-ggsave("graph_inz7d_bundesländer_log_last.png", path = img.path, scale = 2, bg = "white")
+ggsave("graph_inz7d_bundesländer_log_last.png", path = path.img, scale = 2, bg = "white")
 graph.inz7d.bundesländer.log.last
 
-graph.inz7d.rate <- ages.inz7d.österreich.gesamt |>
+graph.inz7d.rate <- ages.timeline.österreich |>
   filter(
-    Bundesland == "Österreich",
     Datum >= as_date("2020-05-01")
   ) |>
   mutate(
-    ratio = Faelle / lag(Faelle, 7, order_by = Datum),
+    ratio = Faelle.inz7d / lag(Faelle.inz7d, 7, order_by = Datum),
   ) |>
   ggplot(aes(y = ratio, x = Datum)) +
   geom_line() +
@@ -143,7 +142,8 @@ graph.inz7d.rate <- ages.inz7d.österreich.gesamt |>
     caption = "Quelle: Daten des AGES Dashboards",
     x="", y = "Inzidenzrate") +
   theme_covid()
-ggsave("graph_inz7d_rate.png", path = img.path, scale = 2, bg = "white")
+graph.inz7d.rate
+ggsave("graph_inz7d_rate.png", path = path.img, scale = 2, bg = "white")
 
 graph.inz7d.rate.last <- graph.inz7d.rate +
   coord_cartesian(
@@ -152,21 +152,23 @@ graph.inz7d.rate.last <- graph.inz7d.rate +
   ) +
   labs(title = "Verhältnis der 7-Tages-Inzidenz zur Vorwoche",
        subtitle = paste0("Inzidenzrate seit ", as_date(.inz7d.start)),
-       caption = paste0("Quelle: Daten der AGES (Stand ", as_date(max(ages.inz7d.österreich.gesamt$Datum)), ")")
+       caption = paste0("Quelle: Daten der AGES (Stand ", as_date(max(ages.timeline.österreich$Datum)), ")")
   ) 
 graph.inz7d.rate.last
+ggsave("graph_inz7d_rate_last.png", path = path.img, scale = 2, bg = "white")
+
 ###########################
 # Hospitalisierung
 ###########################
 
-graph.hospitalisierung.last <- ages.hospitalisierung |>
+graph.hospitalisierung.last <- hospitalization.österreich |>
+  ungroup() |>
   filter(
-    Bundesland == "Österreich",
-    Meldedatum >= .inz7d.start
+    Datum >= .inz7d.start
   ) |>
-  select(Meldedatum,Normalbetten.belegt, ICU.belegt.Cov19) |>
+  select(Datum,Normalbetten.belegt.cov19, ICU.belegt.cov19) |>
   gather(key="Station", value="Belegt", 2:3) |>
-  ggplot(aes(x = Meldedatum, y = Belegt, group = Station, colour = Station)) +
+  ggplot(aes(x = Datum, y = Belegt, group = Station, colour = Station)) +
   geom_line() +
   theme_covid() +
   theme(legend.position="bottom") +
@@ -185,10 +187,9 @@ ggsave("graph_hospitalisierung_last.png", path = img.path, scale = 2, bg = "whit
 
 .test.start <- period.from
 
-graph.bmsgpk.test.österreich <- bmsgpk.test |>
+graph.bmsgpk.test.österreich <- testing.österreich |>
   filter(
     Datum >= .test.start,
-    Bundesland == "Österreich"
   ) |>
   #select(Datum, Tests.gesamt.neu, Tests.gesamt.sma7) |>
   ggplot() +
@@ -197,15 +198,14 @@ graph.bmsgpk.test.österreich <- bmsgpk.test |>
   labs(
     title="Testrate in Österreich",
     subtitle = paste0("Absolute Zahlen und 7-Tages-Durchschnitt seit ", as_date(.test.start)),
-    caption = paste0("Quelle: Daten des BMSGPK (Stand ", as_date(max(bmsgpk.test$Datum)), ")"),
+    caption = paste0("Quelle: Daten des BMSGPK (Stand ", as_date(max(testing.österreich$Datum)), ")"),
     x="", y = "Testrate") +
   theme_covid()
 graph.bmsgpk.test.österreich
 
-graph.bmsgpk.test.österreich.inz7d <- bmsgpk.test |>
+graph.bmsgpk.test.österreich.inz7d <- testing.österreich |>
   filter(
     Datum >= .test.start,
-    Bundesland == "Österreich"
   ) |>
   #select(Datum, Tests.gesamt.neu, Testrate.gesamt.inz7d) |>
   ggplot(aes(x = Datum, y = Testrate.gesamt.inz7d)) +
@@ -217,12 +217,12 @@ graph.bmsgpk.test.österreich.inz7d <- bmsgpk.test |>
   labs(
     title="Testrate in Österreich",
     subtitle = paste0("Testinzidenz seit ", as_date(.test.start)),
-    caption = paste0("Quelle: Daten des BMSGPK (Stand ", as_date(max(bmsgpk.test$Datum)), ")"),
+    caption = paste0("Quelle: Daten des BMSGPK (Stand ", as_date(max(testing.österreich$Datum)), ")"),
     x="", y = "Testinzidenz") +
   theme_covid()
 graph.bmsgpk.test.österreich.inz7d
 
-graph.bmsgpk.test.bundesländer.inz7d <- bmsgpk.test |>
+graph.bmsgpk.test.bundesländer.inz7d <- testing |>
   filter(
     Datum >= .test.start,
     Bundesland != "Österreich"
@@ -234,12 +234,12 @@ graph.bmsgpk.test.bundesländer.inz7d <- bmsgpk.test |>
   labs(
     title="Testrate der Bundesländer",
     subtitle = paste0("Testinzidenz seit ", as_date(.test.start)),
-    caption = paste0("Quelle: Daten des BMSGPK (Stand ", as_date(max(bmsgpk.test$Datum)), ")"),
+    caption = paste0("Quelle: Daten des BMSGPK (Stand ", as_date(max(testing$Datum)), ")"),
     x="", y = "Testinzidenz") +
   theme_covid()
 graph.bmsgpk.test.bundesländer.inz7d
 
-graph.bmsgpk.test.positivrate.österreich <- bmsgpk.test.österreich |>
+graph.bmsgpk.test.positivrate.österreich <- testing.österreich |>
   select(Datum, Positivrate.PCR.sma7, Testrate.PCR.sma7) |>
   gather(key="type", value="value", 3:4) |>
   filter(Datum >= .test.start) |>
@@ -248,7 +248,7 @@ graph.bmsgpk.test.positivrate.österreich <- bmsgpk.test.österreich |>
   labs(
     title="Testpositivrate in Österreich",
     subtitle = paste0("Positivrate als 7-Tages-Durchschnitt seit ", as_date(.test.start)),
-    caption = paste0("Quelle: Daten des BMSGPK (Stand ", as_date(max(bmsgpk.test.österreich$Datum)), ")"),
+    caption = paste0("Quelle: Daten des BMSGPK (Stand ", as_date(max(testing.österreich$Datum)), ")"),
     x="", y = "Rate") +
   scale_colour_manual(values = c(mycolors[["vermillion"]], mycolors[["skyBlue"]]),
                       labels = c("Positivrate", "Anzahl Tests")) +
@@ -300,14 +300,26 @@ graph.ages.reff.bundesländer.nativ <- ages.reff.bundesländer |>
   theme_covid()
 #graph.ages.reff.bundesländer.nativ
 
-graph.ages.estimate_r.österreich.gesamt <- ages.estimate_r.österreich.gesamt |>
+graph.reff.österreich.gesamt <- reff.österreich |>
   filter(Bundesland == "Österreich") |>
-  ggplot(aes(x = Testdatum, y = r_t_most_likely)) +
+  ggplot(aes(x = Datum, y = r_t_most_likely)) +
   geom_line() +
   geom_ribbon(aes(ymin = r_t_lo, ymax = r_t_hi), alpha = 0.1) +
   geom_hline(yintercept = 1) +
   theme_covid()
-ggsave("graph_ages_reff_österreich_gesamt.png", path = img.path, scale = 2, bg = "white")
+graph.reff.österreich.gesamt
+ggsave("graph_reff_österreich_gesamt.png", path = img.path, scale = 2, bg = "white")
+
+graph.reff.österreich.last <- graph.reff.österreich.gesamt +
+  coord_cartesian(
+    xlim = as_date(c(period.from, now2 )),
+    ylim = c(0, max(reff.österreich[reff.österreich$Datum >= period.from, ]$r_t_hi, na.rm = TRUE) )
+  ) 
+labs(title = "7-Tages-Inzidenz der Bundesländer",
+     subtitle = paste0("Inzidenz pro 100.000 Einwohner seit ", as_date(.inz7d.start)),
+     caption = paste0("Quelle: Daten der AGES (Stand ", as_date(max(ages.timeline$Testdatum)), ")")
+) 
+graph.reff.österreich.last
 
 # Estimate EMS
 
@@ -337,13 +349,14 @@ ggsave("graph_ages_reff_österreich_gesamt.png", path = img.path, scale = 2, bg 
 
 # Estimate AGES
 
-graph.ages.estimate_r.bundesländer.last <- ages.estimate_r.österreich.gesamt |>
-  filter(Bundesland != "Österreich", Testdatum >= period.from) |>
-  ggplot(aes(x = Testdatum, y = r_t_most_likely, group = Bundesland, color = Bundesland)) +
+graph.ages.estimate_r.bundesländer.last <- reff.österreich |>
+  filter(Bundesland != "Österreich", Datum >= period.from) |>
+  ggplot(aes(x = Datum, y = r_t_most_likely, group = Bundesland, color = Bundesland)) +
   geom_line() +
   geom_hline(yintercept = 1) +
   theme_covid()
 ggsave("graph_reff_bundesländer_last.png", path = img.path, scale = 2, bg = "white")
+graph.ages.estimate_r.bundesländer.last
 
 graph.ages.estimate_r.österreich.last <- ages.estimate_r.österreich.gesamt |>
   filter(
@@ -359,7 +372,7 @@ graph.ages.estimate_r.österreich.last <- ages.estimate_r.österreich.gesamt |>
   theme_covid() 
 ggsave("graph_reff_österreich_last.png", path = img.path, scale = 2, bg = "white")
 
-graph.ages.estimate_r.österreich.last
+
 
 graph.ages.estimate_r.österreich.altersgruppe.last <- ages.estimate_r.österreich.altersgruppe.gesamt |>
   filter(Testdatum >= period.from) |>
@@ -379,7 +392,7 @@ ggsave("graph_reff_altersgruppe_last.png", path = img.path, scale = 2, bg = "whi
 # Heatmap Altersgruppe Reff
 ############################
 
-heatmap.r.altersgruppe <- ages.estimate_r.österreich.altersgruppe.gesamt |>
+heatmap.reff.altersgruppe <- reff.altersgruppe.österreich |>
   filter(
     Testdatum >= period.from,
   ) |>
@@ -389,7 +402,7 @@ heatmap.r.altersgruppe <- ages.estimate_r.österreich.altersgruppe.gesamt |>
   labs(fill = "Reff", x = "", y = "Altersgruppen") +
   theme_covid() +
   scale_fill_viridis_c(option = "plasma", na.value = "grey50", direction = 1)
-heatmap.r.altersgruppe
+heatmap.reff.altersgruppe
 
 ##########################
 ## Test covid Wellen

@@ -3,24 +3,30 @@ library(lubridate)
 library(ggpubr)
 
 source("R/libmath.R")
+source("R/config.R")
 
 period.from <- rollback(add_with_rollback(now(),months(-1)), roll_to_first = TRUE)
 now2 <- add_with_rollback(now(),days(+1))
-img.path <- "img"
-.rds.path <- "rds/"
+#img.path <- "img"
+#.rds.path <- "rds/"
 
-source("R/01_load_data.R")
-ems.ages.bmsgpk.timeline <- readRDS(paste0(.rds.path, "ems_ages_bmsgpk_timeline.rds"))
-ages.estimate_r.österreich.gesamt <- readRDS(paste0(.rds.path, "ages_reff_österreich_gesamt.rds"))
+#source("R/01_load_data.R")
+ages.timeline <- readRDS(paste0(path.data, "ages.timeline.RDS"))
+ages.reff.österreich <- readRDS(paste0(path.data, "ages.reff.österreich.RDS"))
 #ems.estimate_r.österreich.gesamt <-readRDS(paste0(.rds.path, "ems_reff_österreich_gesamt.rds"))
-ages.estimate_r.österreich.altersgruppe.gesamt <- readRDS(paste0(.rds.path, "ages_reff_österreich_altersgruppe_gesamt.rds"))
+#ages.estimate_r.österreich.altersgruppe.gesamt <- readRDS(paste0(.rds.path, "ages_reff_österreich_altersgruppe_gesamt.rds"))
+
+
+hospitalization <- readRDS(str_glue(path.data, "hospitalization.combined.RDS"))
+testing <- readRDS(str_glue(path.data, "testing.combined.RDS"))
+vaccination <- readRDS(str_glue(path.data, "vaccination.combined.RDS"))
 timeline.covid <- readRDS(paste0(.rds.path, "timeline_covid.rds"))
 
 ####################
 # Inzidenzen
 ####################
 
-ems.ages.bmsgpk.timeline.österreich <- ems.ages.bmsgpk.timeline |> filter(Bundesland == "Österreich")
+#ems.ages.bmsgpk.timeline.österreich <- ems.ages.bmsgpk.timeline |> filter(Bundesland == "Österreich")
 
 ages.inz7d.österreich.gesamt <- ems.ages.bmsgpk.timeline |>
   mutate(
