@@ -181,6 +181,53 @@ graph.hospitalisierung.last <- hospitalization.österreich |>
 graph.hospitalisierung.last
 ggsave("graph_hospitalisierung_last.png", path = img.path, scale = 2, bg = "white")
 
+graph.hospitalisierung.icu.auslastung <- hospitalization.österreich |>
+  ungroup() |>
+  mutate(
+    ICU.avail = ICU.kapazität - (ICU.belegt.cov19 + ICU.belegt.non_cov19)
+  ) |>
+  select(Datum, ICU.belegt.non_cov19, ICU.belegt.cov19, ICU.avail) |>
+  pivot_longer(
+    cols = starts_with("ICU"),
+    names_to = "cat"
+  ) |>
+  ggplot(aes(y = value, x = Datum, fill = factor(cat, levels= c("ICU.avail", "ICU.belegt.non_cov19", "ICU.belegt.cov19") ))) +
+    geom_col(position="fill", width = 1)+
+    scale_y_continuous(labels = scales::percent)+
+    scale_fill_manual(
+      name = "",
+      values = c("#DADAEB", "#9E9AC8", "#6A51A3"),
+      labels = c("Freie Betten", "NonCovid Patienten", "Covidpatienten"),
+    )+
+    labs(title = "Auslastung der Intensivbetten",
+       subtitle = paste0("Auslastung in %"),
+       caption = paste0("Quelle: Daten des AGES (Stand ", as_date(max(hospitalization.österreich$Datum)), ")"),
+       x = "", y = "Auslastung",
+       color = NULL, linetype=NULL
+    ) +
+    geom_hline(aes(yintercept = 0.33, linetype = "limit33"), colour = mycolors["vermillion"]) +
+    geom_hline(aes(yintercept = 0.1, linetype = "limit10"), colour = mycolors["blueishGreen"]) +
+    scale_linetype_manual(
+      name = "Schwellenwert", 
+      values = c(limit33 = 'dashed', limit10 = 'dashed'),
+      guide = guide_legend(override.aes = list(color = c(mycolors["vermillion"], mycolors["blueishGreen"]))),
+      labels = c("33%", "10%")
+    )+
+    #scale_colour_manual(values = c(limit33="red",limit10="blue")) +
+    #guides(guide_legend(override.aes = ( title = ""))) +
+    theme_covid()
+graph.hospitalisierung.icu.auslastung 
+
+graph.hospitalisierung.icu.auslastung.last <-graph.hospitalisierung.icu.auslastung +
+  coord_cartesian(
+    xlim = as_date(c(period.from, now2 )),
+    #ylim = c(0, max(hospitalization.österreich[hospitalization.österreich$Datum >= period.from, ]$Faelle.inz7d, na.rm = TRUE) )
+  ) +
+  labs(title = "Auslastung der Intensivbetten",
+       subtitle = paste0("Auslastung seit ", as_date(period.from)),
+       caption = paste0("Quelle: Daten der AGES (Stand ",  as_date(max(hospitalization.österreich$Datum)), ")")
+  ) 
+graph.hospitalisierung.icu.auslastung.last
 #############################
 # Tests
 #############################

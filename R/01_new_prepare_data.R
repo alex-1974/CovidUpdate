@@ -88,9 +88,15 @@ hospitalization.combined <- purrr::reduce(
   dplyr::full_join,
   by = c("Datum", "Bundesland")
   ) |>
+  filter(
+    if_all(
+      .cols = starts_with(c("ICU.","Normalbetten.")),
+      .fns = ~ !is.na(.x)
+    )) |>
   group_by(Bundesland) |>
   mutate(
-    Einwohner = if_else(is.na(Einwohner), lag(Einwohner, 1, default = NA, order_by = Datum), Einwohner)
+    Einwohner = if_else(is.na(Einwohner), lag(Einwohner, 1, default = NA, order_by = Datum), Einwohner),
+    ICU.Auslastung.cov19 = (100 / ICU.kapazität) * ICU.belegt.cov19
   )
 tail(hospitalization.combined)
 saveRDS(hospitalization.combined, str_glue(path.data, "hospitalization.combined.RDS"), compress = "xz")
@@ -117,7 +123,7 @@ testing.combined <- purrr::reduce(
   ),
   dplyr::left_join,
   by = c("Datum", "Bundesland")
-) |>
+  ) |>
   filter(
     if_all(
       .cols = starts_with("Tests"),
