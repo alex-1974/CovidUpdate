@@ -96,7 +96,11 @@ hospitalization.combined <- purrr::reduce(
   group_by(Bundesland) |>
   mutate(
     Einwohner = if_else(is.na(Einwohner), lag(Einwohner, 1, default = NA, order_by = Datum), Einwohner),
-    ICU.Auslastung.cov19 = (100 / ICU.kapazität) * ICU.belegt.cov19
+    # Auslastung der ICU in % aller verfügbaren ICU-Betten (inkl. Notkapazität)
+    ICU.Auslastung.cov19 = (100 / ICU.kapazität) * ICU.belegt.cov19,
+    # Hospitalisierungsinzidenz (Normalbetten und ICU)
+    Normalbetten.inz7d = notification_rate_7d(cases = Normalbetten.belegt.cov19, pop = Einwohner),
+    ICU.inz7d = notification_rate_7d(cases = ICU.belegt.cov19, pop = Einwohner)
   )
 tail(hospitalization.combined)
 saveRDS(hospitalization.combined, str_glue(path.data, "hospitalization.combined.RDS"), compress = "xz")
@@ -192,8 +196,9 @@ ages.reff.bundesländer <- ages.reff.bundesländer |>
   ) 
 saveRDS(ages.reff.bundesländer, str_glue(path.data, "ages.reff.bundesländer.RDS"), compress = "xz")
 
-reff.österreich <- ages.timeline.österreich |>
-  estimate_r(cases = Faelle.neu, date = Datum, groupby = Bundesland, intervall = 7)
+reff.österreich <- ages.timeline |>
+  #filter(Bundesland == "Österreich") |>
+  estimate_r(cases = Faelle.neu, date = Testdatum, groupby = Bundesland, intervall = 7)
 saveRDS(reff.österreich, paste0(path.data, "reff.österreich.RDS"))
 
 reff.altersgruppe.österreich <- ages.altersgruppe |> 

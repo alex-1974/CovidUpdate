@@ -147,11 +147,11 @@ ggsave("graph_inz7d_rate.png", path = path.img, scale = 2, bg = "white")
 
 graph.inz7d.rate.last <- graph.inz7d.rate +
   coord_cartesian(
-    xlim = as_date(c(.inz7d.start, now2 )),
+    xlim = as_date(c(period.from, now2 )),
    # ylim = c(0, max(ages.inz7d.österreich.gesamt[ages.inz7d.österreich.gesamt$Datum >= .inz7d.start, ]$ratio, na.rm = TRUE) )
   ) +
   labs(title = "Verhältnis der 7-Tages-Inzidenz zur Vorwoche",
-       subtitle = paste0("Inzidenzrate seit ", as_date(.inz7d.start)),
+       subtitle = paste0("Inzidenzrate seit ", as_date(period.from)),
        caption = paste0("Quelle: Daten der AGES (Stand ", as_date(max(ages.timeline.österreich$Datum)), ")")
   ) 
 graph.inz7d.rate.last
@@ -164,7 +164,7 @@ ggsave("graph_inz7d_rate_last.png", path = path.img, scale = 2, bg = "white")
 graph.hospitalisierung.last <- hospitalization.österreich |>
   ungroup() |>
   filter(
-    Datum >= .inz7d.start
+    Datum >= period.from
   ) |>
   select(Datum,Normalbetten.belegt.cov19, ICU.belegt.cov19) |>
   gather(key="Station", value="Belegt", 2:3) |>
@@ -179,7 +179,7 @@ graph.hospitalisierung.last <- hospitalization.österreich |>
                       labels = c("Intensivbetten", "Normalbetten"))
   
 graph.hospitalisierung.last
-ggsave("graph_hospitalisierung_last.png", path = img.path, scale = 2, bg = "white")
+ggsave("graph_hospitalisierung_last.png", path = path.img, scale = 2, bg = "white")
 
 graph.hospitalisierung.icu.auslastung <- hospitalization.österreich |>
   ungroup() |>
@@ -200,7 +200,7 @@ graph.hospitalisierung.icu.auslastung <- hospitalization.österreich |>
       labels = c("Freie Betten", "NonCovid Patienten", "Covidpatienten"),
     )+
     labs(title = "Auslastung der Intensivbetten",
-       subtitle = paste0("Auslastung in %"),
+       subtitle = paste0("Auslastung in Österreich in %"),
        caption = paste0("Quelle: Daten des AGES (Stand ", as_date(max(hospitalization.österreich$Datum)), ")"),
        x = "", y = "Auslastung",
        color = NULL, linetype=NULL
@@ -213,21 +213,21 @@ graph.hospitalisierung.icu.auslastung <- hospitalization.österreich |>
       guide = guide_legend(override.aes = list(color = c(mycolors["vermillion"], mycolors["blueishGreen"]))),
       labels = c("33%", "10%")
     )+
-    #scale_colour_manual(values = c(limit33="red",limit10="blue")) +
-    #guides(guide_legend(override.aes = ( title = ""))) +
     theme_covid()
 graph.hospitalisierung.icu.auslastung 
+ggsave("graph_hospitalisierung_icu_auslastung.png", path = path.img, scale = 2, bg = "white")
 
 graph.hospitalisierung.icu.auslastung.last <-graph.hospitalisierung.icu.auslastung +
   coord_cartesian(
     xlim = as_date(c(period.from, now2 )),
-    #ylim = c(0, max(hospitalization.österreich[hospitalization.österreich$Datum >= period.from, ]$Faelle.inz7d, na.rm = TRUE) )
   ) +
   labs(title = "Auslastung der Intensivbetten",
-       subtitle = paste0("Auslastung seit ", as_date(period.from)),
+       subtitle = paste0("Österreich seit ", as_date(period.from)),
        caption = paste0("Quelle: Daten der AGES (Stand ",  as_date(max(hospitalization.österreich$Datum)), ")")
   ) 
 graph.hospitalisierung.icu.auslastung.last
+ggsave("graph_hospitalisierung_icu_auslastung_last.png", path = path.img, scale = 2, bg = "white")
+
 #############################
 # Tests
 #############################
@@ -301,7 +301,7 @@ graph.bmsgpk.test.positivrate.österreich <- testing.österreich |>
                       labels = c("Positivrate", "Anzahl Tests")) +
   theme_covid()
 graph.bmsgpk.test.positivrate.österreich
-ggsave("graph_bmsgpk_test_positivrate_österreich.png", path = img.path, scale = 2, bg = "white")
+ggsave("graph_bmsgpk_test_positivrate_österreich.png", path = path.img, scale = 2, bg = "white")
 
 #############################
 # Reff
@@ -349,19 +349,19 @@ graph.ages.reff.bundesländer.nativ <- ages.reff.bundesländer |>
 
 graph.reff.österreich.gesamt <- reff.österreich |>
   filter(Bundesland == "Österreich") |>
-  ggplot(aes(x = Datum, y = r_t_most_likely)) +
+  ggplot(aes(x = Testdatum, y = r_t_most_likely)) +
   geom_line() +
   geom_ribbon(aes(ymin = r_t_lo, ymax = r_t_hi), alpha = 0.1) +
   geom_hline(yintercept = 1) +
   theme_covid()
 graph.reff.österreich.gesamt
-ggsave("graph_reff_österreich_gesamt.png", path = img.path, scale = 2, bg = "white")
+ggsave("graph_reff_österreich_gesamt.png", path = path.img, scale = 2, bg = "white")
 
 graph.reff.österreich.last <- graph.reff.österreich.gesamt +
   coord_cartesian(
     xlim = as_date(c(period.from, now2 )),
-    ylim = c(0, max(reff.österreich[reff.österreich$Datum >= period.from, ]$r_t_hi, na.rm = TRUE) )
-  ) 
+    ylim = c(0, max(reff.österreich[reff.österreich$Testdatum >= period.from, ]$r_t_hi, na.rm = TRUE) )
+  ) +
 labs(title = "7-Tages-Inzidenz der Bundesländer",
      subtitle = paste0("Inzidenz pro 100.000 Einwohner seit ", as_date(.inz7d.start)),
      caption = paste0("Quelle: Daten der AGES (Stand ", as_date(max(ages.timeline$Testdatum)), ")")
@@ -383,7 +383,7 @@ graph.reff.österreich.last
 #    x="", y = "Reff") +
 #  theme_covid()
 #saveRDS(graph.ems.estimate_r.österreich.gesamt, file = paste0(rds.path, "graph_ems_reff_österreich_gesamt.rds"))
-#ggsave("graph_ems_reff_österreich_gesamt.png", path = img.path, scale = 2, bg = "white")
+#ggsave("graph_ems_reff_österreich_gesamt.png", path = path.img, scale = 2, bg = "white")
 
 #graph.ems.estimate_r.österreich.last <- graph.ems.estimate_r.österreich.gesamt +
 #  xlim(as.Date(c(period.from, now2))) +
@@ -391,21 +391,21 @@ graph.reff.österreich.last
 #       max(ems.estimate_r.österreich.gesamt[ems.estimate_r.österreich.gesamt$Meldedatum >= period.from, ]$r_t_most_likely, na.rm = TRUE)) +
 #  labs(subtitle = paste0("Österreich seit ", as_date(period.from))) 
 #saveRDS(graph.ems.estimate_r.österreich.last, file = paste0(rds.path, "graph_ems_reff_österreich_last.rds"))
-#ggsave("graph_ems_reff_österreich_last.png", path = img.path, scale = 2, bg = "white")
+#ggsave("graph_ems_reff_österreich_last.png", path = path.img, scale = 2, bg = "white")
 #graph.ems.estimate_r.österreich.last
 
 # Estimate AGES
 
 graph.ages.estimate_r.bundesländer.last <- reff.österreich |>
-  filter(Bundesland != "Österreich", Datum >= period.from) |>
-  ggplot(aes(x = Datum, y = r_t_most_likely, group = Bundesland, color = Bundesland)) +
+  filter(Bundesland != "Österreich", Testdatum >= period.from) |>
+  ggplot(aes(x = Testdatum, y = r_t_most_likely, group = Bundesland, color = Bundesland)) +
   geom_line() +
   geom_hline(yintercept = 1) +
   theme_covid()
-ggsave("graph_reff_bundesländer_last.png", path = img.path, scale = 2, bg = "white")
+ggsave("graph_reff_bundesländer_last.png", path = path.img, scale = 2, bg = "white")
 graph.ages.estimate_r.bundesländer.last
 
-graph.ages.estimate_r.österreich.last <- ages.estimate_r.österreich.gesamt |>
+graph.ages.estimate_r.österreich.last <- reff.österreich |>
   filter(
     Testdatum >= period.from,
     Bundesland == "Österreich"
@@ -417,11 +417,12 @@ graph.ages.estimate_r.österreich.last <- ages.estimate_r.österreich.gesamt |>
   geom_hline(yintercept = 1) +
   labs(x = "", y = "Reff") +
   theme_covid() 
-ggsave("graph_reff_österreich_last.png", path = img.path, scale = 2, bg = "white")
+graph.ages.estimate_r.österreich.last
+ggsave("graph_reff_österreich_last.png", path = path.img, scale = 2, bg = "white")
 
 
 
-graph.ages.estimate_r.österreich.altersgruppe.last <- ages.estimate_r.österreich.altersgruppe.gesamt |>
+graph.ages.estimate_r.österreich.altersgruppe.last <- reff.altersgruppe.österreich |>
   filter(Testdatum >= period.from) |>
   ggplot(aes(x = Testdatum, y = r_t_most_likely, group = Altersgruppe, color = Altersgruppe)) +
   geom_line() +
@@ -429,11 +430,11 @@ graph.ages.estimate_r.österreich.altersgruppe.last <- ages.estimate_r.österrei
   labs(
     title="Nettoreproduktionszahlen der Altersgruppen in Österreich",
     subtitle = paste0("Verlauf seit ", as_date(period.from)),
-    caption = paste0("Quelle: Daten der AGES (Stand ", as_date(max(ages.estimate_r.österreich.altersgruppe.gesamt$Testdatum)), ")"),
+    caption = paste0("Quelle: Daten der AGES (Stand ", as_date(max(reff.altersgruppe.österreich$Testdatum)), ")"),
     x="", y = "Nettoreproduktionszahl") +
   theme_covid()
 graph.ages.estimate_r.österreich.altersgruppe.last
-ggsave("graph_reff_altersgruppe_last.png", path = img.path, scale = 2, bg = "white")
+ggsave("graph_reff_altersgruppe_last.png", path = path.img, scale = 2, bg = "white")
 
 ############################
 # Heatmap Altersgruppe Reff
@@ -450,13 +451,14 @@ heatmap.reff.altersgruppe <- reff.altersgruppe.österreich |>
   theme_covid() +
   scale_fill_viridis_c(option = "plasma", na.value = "grey50", direction = 1)
 heatmap.reff.altersgruppe
+ggsave("heatmap.r.altersgruppe.png", path = path.img, scale = 2, bg = "white")
 
 ##########################
 ## Test covid Wellen
 
 from <- as_date("2019-12-15")
 to <- as_date("2020-02-15")
-heatmap.r.altersgruppe.welle <- ages.estimate_r.österreich.altersgruppe.gesamt |>
+heatmap.r.altersgruppe.welle <- reff.altersgruppe.österreich |>
   filter(
     Testdatum >= from,
     Testdatum <= to,
@@ -470,7 +472,7 @@ heatmap.r.altersgruppe.welle <- ages.estimate_r.österreich.altersgruppe.gesamt 
   scale_fill_viridis_c(option = "plasma", na.value = "grey50", direction = 1)
 heatmap.r.altersgruppe.welle
 
-graph.ages.estimate_r.österreich.last.welle <- ages.estimate_r.österreich.gesamt |>
+graph.ages.estimate_r.österreich.last.welle <- reff.österreich |>
   filter(
     Testdatum >= from,
     Testdatum <= to,
@@ -488,7 +490,7 @@ graph.ages.estimate_r.österreich.last.welle
 graph.inz7d.österreich.welle <- graph.inz7d.österreich.gesamt +
   coord_cartesian(
     xlim = as_date(c(from, to )),
-    ylim = c(0, max(ages.inz7d.österreich.gesamt[ages.inz7d.österreich.gesamt$Datum >= from, ]$Faelle, na.rm = TRUE) )
+    ylim = c(0, max(ages.inz7d.österreich.gesamt[ages.inz7d.österreich.gesamt$Testdatum >= from, ]$Faelle, na.rm = TRUE) )
   )
 graph.inz7d.österreich.welle
 
@@ -497,7 +499,7 @@ heatmap.r.combined.welle <- ggpubr::ggarrange(graph.inz7d.österreich.welle+ lab
                                               heatmap.r.altersgruppe.welle+ labs(title=element_blank(), subtitle=element_blank(),caption=element_blank()), 
                                               ncol = 1, nrow = 3, align = "hv", heights = c(3,2,5)) |>
   annotate_figure(top = text_grob("Reff in den Altersgruppen",  family = "libertinus serif", size = 16, y = 0.5))
-#ggsave("heatmap_reff_combined_österreich_welle06_22.png", path = img.path, scale = 2, bg = "white")
+#ggsave("heatmap_reff_combined_österreich_welle06_22.png", path = path.img, scale = 2, bg = "white")
 heatmap.r.combined.welle
 #########################
 
@@ -516,10 +518,10 @@ heatmap.inz7d.altersgruppe <- ages.altersgruppe |>
   scale_fill_viridis_c(option = "plasma", na.value = "grey50", direction = 1)
 heatmap.inz7d.altersgruppe
 
-heatmap.r.combined <- ggpubr::ggarrange(graph.ages.estimate_r.österreich.last, heatmap.r.altersgruppe, 
+heatmap.r.combined <- ggpubr::ggarrange(graph.reff.österreich.last, heatmap.reff.altersgruppe, 
                                         ncol = 1, nrow = 2, align = "hv", heights = c(1,3)) |>
   annotate_figure(top = text_grob("Reff in den Altersgruppen",  family = "libertinus serif", size = 16, y = 0.5))
-ggsave("heatmap_reff_combined_österreich_last.png", path = img.path, scale = 2, bg = "white")
+ggsave("heatmap_reff_combined_österreich_last.png", path = path.img, scale = 2, bg = "white")
 
 heatmap.inz7d.altersgruppe <- ages.altersgruppe |>
   filter(Bundesland == "Österreich",  Testdatum >= period.from) |>
@@ -548,12 +550,13 @@ graph.combined <- ggpubr::ggarrange(graph.epidemiologic_curve.last+ labs(title=e
                                     graph.hospitalisierung.last+ labs(title=element_blank(),subtitle=element_blank(),caption=element_blank()),
                                     ncol = 1, nrow = 5, align = "hv", heights=c(2.5,1.8,2,1.5,2.2)) |>
                   annotate_figure(top = text_grob("Pandemieverlauf in Österreich",  family = "libertinus serif", size = 16, y = 0.5))
-ggsave("graph_combined_last.png", path = img.path, scale = 4, bg = "white")
+graph.combined
+ggsave("graph_combined_last.png", path = path.img, scale = 4, bg = "white")
 
-heatmap.r.combined <- ggpubr::ggarrange(graph.ages.estimate_r.österreich.last, heatmap.r.altersgruppe, 
+heatmap.r.combined <- ggpubr::ggarrange(graph.ages.estimate_r.österreich.last, heatmap.reff.altersgruppe, 
                                         ncol = 1, nrow = 2, align = "hv", heights = c(1,3)) |>
   annotate_figure(top = text_grob("Reff in den Altersgruppen",  family = "libertinus serif", size = 16, y = 0.5))
-ggsave("heatmap_reff_combined_österreich_last.png", path = img.path, scale = 2, bg = "white")
+ggsave("heatmap_reff_combined_österreich_last.png", path = path.img, scale = 2, bg = "white")
 heatmap.r.combined
 
 ############################
@@ -568,7 +571,7 @@ heatmap.r.combined
     )
   ) |>
   gg_vistime(show_labels = FALSE) +
-  xlim(as.POSIXct(c(min(ages.inz7d.österreich.gesamt$Datum), now2)))+
+  xlim(as.POSIXct(c(min(ages.inz7d.österreich.gesamt$Testdatum), now2)))+
   theme_covid()+
   theme(
     panel.border = element_blank(),
