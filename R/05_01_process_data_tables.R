@@ -35,10 +35,11 @@ table.ages.estimate_r.bundesländer <- reff.österreich |>
     caption = str_glue("Reff der Bundesländer vom {max(reff.österreich$Testdatum)}"),
     booktabs = TRUE,
     digits=0,
-    format = "latex") |>
+    #format = "latex"
+    ) |>
   kable_styling(full_width = F) |>
   add_header_above(c(" ", " ",  "Änderung seit" = 2)) |>
-  save_kable(file = "~/CovidR/Covid Update/img/table_ages_reff.pdf", size = 2)
+#save_kable(table.ages.estimate_r.bundesländer, file = "~/CovidR/Covid Update/img/table_ages_reff.pdf")
 
 table.ages.estimate_r.altersgruppe <- reff.altersgruppe.österreich |>
   filter(

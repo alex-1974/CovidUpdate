@@ -34,15 +34,25 @@ warning = function(w) {
 
 ## Extract CovidFaelle_Altersgruppe.csv
 tryCatch({
-ages.altersgruppe <- read_delim(paste0(tempdir(), "/CovidFaelle_Altersgruppe.csv"), delim=";") |>
+ages.altersgruppe <- read_delim(paste0(tempdir(), "/CovidFaelle_Altersgruppe.csv"), delim=";",
+                                col_types = cols(
+                                  Time = col_datetime("%d.%m.%Y %H:%M:%S"),
+                                  Altersgruppe = col_character(),
+                                  Bundesland = col_character(),
+                                  AnzEinwohner = col_integer(),
+                                  Geschlecht = col_character(),
+                                  Anzahl = col_integer(),
+                                  AnzahlGeheilt = col_integer(),
+                                  AnzahlTot = col_integer()
+                                )) |>
   select(
     Testdatum = Time, Altersgruppe, Bundesland, Einwohner = AnzEinwohner, Geschlecht, Faelle.cumsum = Anzahl, Genesen.cumsum = AnzahlGeheilt, Gestorben.cumsum = AnzahlTot
   ) %>%
   chain_start %>%
   verify(nrow(.) > 0) %>%
-  verify(as_date(dmy_hms(Testdatum)) > as_date("2020-01-01") & as_date(dmy_hms(Testdatum)) < now()) %>%
-  assert(in_set(c("Österreich", bundesländer.list)), Bundesland) %>% 
-  assert(in_set(altersgruppe.list), Altersgruppe) %>%
+  verify(Testdatum > as_date("2020-01-01") & Testdatum < now()) %>%
+  assert(in_set(bundesländer.fct), Bundesland) %>% 
+  assert(in_set(altersgruppe.fct), Altersgruppe) %>%
   assert(in_set(c("M","W")), Geschlecht) %>%
   verify(Einwohner >= 0) %>%
   verify(Faelle.cumsum >= 0) %>%
@@ -65,14 +75,17 @@ warning = function(w) {
 
 ## Extract CovidFaelle_Timeline.csv
 tryCatch({
-ages.timeline <- read_delim(paste0(tempdir(), "/CovidFaelle_Timeline.csv"), delim=";") |>
+ages.timeline <- read_delim(paste0(tempdir(), "/CovidFaelle_Timeline.csv"), delim=";",
+                            col_types = cols(
+                              Time = col_datetime("%d.%m.%Y %H:%M:%S")
+                            )) |>
   select(
     Testdatum = Time, Bundesland, Einwohner = AnzEinwohner, Faelle.neu = AnzahlFaelle, Genesen.neu = AnzahlGeheiltTaeglich, Gestorben.neu = AnzahlTotTaeglich
   )  %>%
   chain_start %>%
   verify(nrow(.) > 0) %>%
-  #verify(Testdatum > as_date("2020-01-01") & Testdatum < now()) %>%
-  assert(in_set(c("Österreich", bundesländer.list)), Bundesland) %>%
+  verify(Testdatum > as_date("2020-01-01") & Testdatum < now()) %>%
+  assert(in_set(bundesländer.fct), Bundesland) %>%
   verify(Einwohner >= 0) %>%
   verify(Faelle.neu >= 0) %>%
   verify(Genesen.neu >= 0) %>%
@@ -146,7 +159,7 @@ bmsgpk.timeline <-read_delim(temp, delim=";") |>
   chain_start %>% 
   verify(nrow(.) > 0) %>%
   verify(Meldedatum >= as_date("2020-01-01") & Meldedatum <= now()) %>%
-  assert(in_set(c("Österreich", bundesländer.list)), Bundesland) %>%
+  assert(in_set(bundesländer.fct), Bundesland) %>%
   #verify(all(bmsgpk.timeline |> count(Bundesland, Meldedatum) |> select(n) == 1)) %>%
   chain_end
 

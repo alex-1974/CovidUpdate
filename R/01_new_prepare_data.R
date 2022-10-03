@@ -8,7 +8,7 @@ source("R/libmath.R")
 # AGES timeline
 ages.timeline <- ages.timeline |>
   mutate(
-    Testdatum = as_date(dmy_hms(Testdatum)),
+    Testdatum = as_date(ymd(Testdatum)),
     Bundesland = factor(Bundesland, levels = bundesländer.fct, ordered = TRUE)
   ) |>
   group_by(Bundesland) |>
@@ -27,7 +27,7 @@ saveRDS(ages.timeline, str_glue(path.data, "ages.timeline.RDS"), compress = "xz"
 # AGES altersgruppe
 ages.altersgruppe <- ages.altersgruppe |> 
   mutate(
-    Testdatum = as_date(dmy_hms(Testdatum)), 
+    Testdatum = as_date(ymd(Testdatum)), 
     Bundesland = factor(Bundesland, levels = bundesländer.fct, ordered = TRUE),
     Altersgruppe = factor(Altersgruppe, levels = altersgruppe.fct, ordered = TRUE),
     Geschlecht = factor(str_to_lower(Geschlecht), levels = sex.fct)
